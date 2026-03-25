@@ -49,6 +49,29 @@ Endpoints publicos esperados:
 - `http://localhost:8081/`
 - `http://localhost:8081/ping`
 
+
+## Requisitos de Ambiente e Variáveis
+
+- É obrigatório ter o Java 21 instalado. O projeto foi configurado e testado apenas com Java 21. Outras versões (ex: Java 25) podem não funcionar devido à configuração do Maven e dependências do Micronaut. Recomenda-se fortemente usar exatamente o Java 21.
+- A variável de ambiente `JAVA_HOME` deve estar definida e apontando para o diretório de instalação do Java 21.
+	- No Windows: Exemplo de valor: `C:\Program Files\Java\jdk-21`
+	- No Linux/macOS: Exemplo de valor: `/usr/lib/jvm/java-21-openjdk`
+- O comando `java` deve estar disponível no PATH e corresponder ao Java 21.
+- Docker Desktop deve estar rodando.
+- As credenciais `.env` devem estar preenchidas conforme instruções acima.
+
+### Como verificar o Java
+
+Abra um terminal e execute:
+
+```powershell
+java -version
+```
+O resultado deve indicar Java 21. Se aparecer outra versão, ajuste o JAVA_HOME e o PATH.
+
+Se você tiver apenas o Java 25 instalado, o projeto provavelmente não irá compilar ou rodar corretamente. Instale o Java 21 e configure como padrão.
+
+---
 ## Troubleshooting
 
 - `401 Unauthorized` na raiz:

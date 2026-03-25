@@ -1,4 +1,29 @@
+## Automação: Criação e Renomeação de Microsserviços
+
+Para criar ou renomear microsserviços de forma padronizada (manual ou via IA), siga o guia em:
+
+- [MICROSERVICE_TEMPLATE.md](./MICROSERVICE_TEMPLATE.md)
+
+Esse arquivo traz checklist, convenções e dicas para automação.
+
 # AI Context - Server Workspace
+
+## Requisitos de Ambiente
+
+- Java 21 instalado e configurado (obrigatório, outras versões podem não funcionar)
+- Variável de ambiente `JAVA_HOME` apontando para o diretório do Java 21
+- Comando `java` disponível no PATH e correspondendo ao Java 21
+- Docker Desktop em execução
+- Preencher arquivos `.env` conforme exemplos em `env-pattern`
+- Para detalhes e troubleshooting, consulte o README principal em `Codigo/Server/README.md`
+
+## Principais Dependências
+
+- Micronaut 4.x (framework principal dos microsserviços)
+- Maven (gerenciador de build e dependências)
+- Java 21 (linguagem e runtime)
+
+> O projeto não utiliza frameworks de IA/ML diretamente. Caso venha a utilizar, documente aqui as bibliotecas relevantes.
 
 ## Scope
 
