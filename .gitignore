@@ -1,0 +1,27 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code and IDE
+.vscode/*
+!.vscode/settings.json
+**/.idea/
+**/*.iml
+**/*.ipr
+**/*.iws
+**/.project
+**/.settings/
+**/.classpath
+**/.factorypath
+
+# Java / Maven / Gradle outputs
+**/target/
+**/build/
+**/out/
+**/.gradle/
+
+# Micronaut generated files
+**/.micronaut/
+
+# Secrets and local env
+**/.env

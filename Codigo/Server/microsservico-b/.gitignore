@@ -1,0 +1,2 @@
+# Local secrets specific to this service
+.env

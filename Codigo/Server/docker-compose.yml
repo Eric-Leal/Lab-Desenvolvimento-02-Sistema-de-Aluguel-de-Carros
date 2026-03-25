@@ -1,0 +1,29 @@
+services:
+  microsservico:
+    image: eclipse-temurin:21-jdk-jammy
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    volumes:
+      - ./microsservico/target:/app:ro
+    env_file:
+      - ./microsservico/.env
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - JAVA_TOOL_OPTIONS=-Djava.net.preferIPv4Stack=true
+    command: ["java", "-jar", "/app/microsservico-0.1.jar"]
+
+  microsservico-b:
+    image: eclipse-temurin:21-jdk-jammy
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+    volumes:
+      - ./microsservico-b/target:/app:ro
+    env_file:
+      - ./microsservico-b/.env
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - JAVA_TOOL_OPTIONS=-Djava.net.preferIPv4Stack=true
+      - MICRONAUT_SERVER_PORT=8081
+    command: ["java", "-jar", "/app/microsservico-b-0.1.jar"]
