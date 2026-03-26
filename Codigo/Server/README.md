@@ -36,6 +36,79 @@ Entao estes comandos funcionam de qualquer uma das tres pastas:
 
 Em qualquer caso, a acao sempre sobe os dois servicos juntos.
 
+## Run-local (desenvolvimento individual)
+
+Para executar um microserviço localmente (IDE/terminal) sem dependências adicionais, existe um dispatcher global que carrega o arquivo `.env` do serviço e inicia o `mvnw` no diretório do serviço.
+
+- Rodar a partir da pasta do serviço:
+
+```powershell
+cd Codigo/Server/microsservico
+..\scripts\run-local.ps1
+
+# Em outro terminal para o outro serviço (se desejar rodar localmente também)
+cd Codigo/Server/microsservico-b
+..\scripts\run-local.ps1
+```
+
+- Observação: o dispatcher infere o nome do serviço a partir da pasta atual, então não é necessário passar parâmetros.
+
+## Docker vs Local — importante
+
+- Não execute a mesma aplicação duas vezes (container + processo local). Isso causa conflito de porta (Address already in use) e comportamento inesperado.
+- Recomendações:
+	- Modo Docker-only: use `.	ools\dev.cmd up` (ou `docker-compose up -d --build`) e abra os endpoints em `http://localhost:8080` e `http://localhost:8081`.
+	- Modo Local-only: execute apenas o Postgres via Docker (`docker-compose up -d postgres`) e rode os microserviços localmente com `..\scripts\run-local.ps1` dentro de cada pasta.
+	- Mixed mode: possível, mas ajuste os `DB_URL` conforme explicado nos exemplos (`postgres:5432` para containers, `localhost:5433` para processos locais conectando ao Postgres em container).
+
+Usar o modo local é útil para debugar e testar mudanças de código rapidamente sem rebuildar containers.
+
+### Subir um único serviço com Docker
+
+- Você pode subir apenas um serviço do compose em vez de todos. Exemplo (na pasta `Codigo/Server`):
+
+```powershell
+docker-compose up -d microsservico
+docker-compose up -d microsservico-b
+```
+
+- O `docker-compose` também iniciará automaticamente serviços dos quais ele dependa (definidos em `depends_on`).
+- Se quiser usar o compose antigo (que inclui Postgres local), especifique o arquivo:
+
+```powershell
+docker-compose -f docker-compose-antigo.yml up -d postgres
+docker-compose -f docker-compose-antigo.yml up -d microsservico
+```
+
+### Run-local vs Docker (resumo prático)
+
+- `run-local` não inicia containers: ele apenas carrega o `.env` do serviço e executa `mvnw` localmente.
+- Se o seu serviço precisa de Postgres e você não tem um banco remoto (Supabase), suba apenas o Postgres em container e rode o serviço localmente:
+
+```powershell
+docker-compose -f docker-compose-antigo.yml up -d postgres
+cd Codigo/Server/microsservico
+..\scripts\run-local.ps1
+```
+
+- Evite rodar o mesmo serviço no container e local ao mesmo tempo — causa conflito de porta. Use `docker-compose ps` e `docker ps` para inspecionar.
+
+## Ver logs no Docker
+
+Se estiver usando Docker, os logs dos serviços podem ser acompanhados com:
+
+```powershell
+cd Codigo/Server
+docker-compose logs -f microsservico
+docker-compose logs -f microsservico-b
+```
+
+Ou para ver todos os serviços:
+
+```powershell
+docker-compose logs -f
+```
+
 ## Validacao rapida
 
 ```powershell
