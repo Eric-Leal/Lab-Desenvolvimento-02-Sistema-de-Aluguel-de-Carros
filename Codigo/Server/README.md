@@ -10,7 +10,7 @@ Use sempre esta pasta (`Codigo/Server`) como ponto central para subir tudo.
 	- `Codigo/Server/microsservico/.env`
 	- `Codigo/Server/microsservico-b/.env`
 
-- **Nota:** Os arquivos ` .env` e ` .env.local` devem existir no diretório do serviço correspondente para que o modo escolhido funcione corretamente (os scripts e o dispatcher carregam variáveis destes arquivos). Garanta que ambos estejam presentes e preenchidos antes de rodar no modo local ou em container.
+- **Nota:** Os arquivos ` .env` e ` .env.local` devem existir no diretório do serviço correspondente para que o modo escolhido funcione corretamente (os scripts e o dispatcher carregam variáveis destes arquivos). Garanta que ambos estejam presentes e preenchidos antes de rodar no modo local ou em container
 
 ## Comandos
 
