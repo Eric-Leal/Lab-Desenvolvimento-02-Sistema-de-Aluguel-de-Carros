@@ -14,6 +14,8 @@ Behavior:
   - If run from inside a microservice folder and that folder contains `run-local.ps1`, it will be executed.
   - If run from the repo root with a service name, it will look for that service folder.
   - If no `run-local.ps1` is present but `mvnw.bat` exists, the script will load the service `.env` and run `mvnw.bat mn:run`.
+  - Loads .env first, then .env.local overrides (if exists).
+  - Ensures postgres is running via docker compose before starting the service.
 #>
 
 param(
@@ -24,7 +26,6 @@ $cwd = (Get-Location).Path
 $leaf = Split-Path -Leaf $cwd
 
 if (-not $Service) {
-    # Infer service from current folder name
     $Service = $leaf
 }
 
@@ -33,7 +34,10 @@ if (-not $Service) {
     exit 1
 }
 
-$servicePath = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Definition) "..\$Service"
+$scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$serverRoot = (Resolve-Path (Join-Path $scriptsDir "..")).Path
+
+$servicePath = Join-Path $serverRoot $Service
 $servicePath = (Resolve-Path $servicePath).Path
 
 if (-not (Test-Path $servicePath)) {
@@ -48,23 +52,50 @@ if (Test-Path $runner) {
     exit $LASTEXITCODE
 }
 
-# Fallback: load .env and run mvnw.bat
+# Garante que o postgres está rodando
+Write-Host "Garantindo que o postgres esta rodando..."
+Push-Location $serverRoot
+try {
+    docker compose up -d postgres
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Falha ao subir o postgres."
+        exit 1
+    }
+} finally {
+    Pop-Location
+}
+
+# Função para carregar um arquivo .env
+function Load-EnvFile {
+    param([string]$Path)
+
+    Get-Content $Path | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -eq '' -or $line.StartsWith('#')) { return }
+        $parts = $line -split '=', 2
+        if ($parts.Count -ne 2) { return }
+        $key = $parts[0].Trim()
+        $value = $parts[1].Trim()
+        if ($value.StartsWith('"') -and $value.EndsWith('"')) { $value = $value.Trim('"') }
+        if ($value.StartsWith("'") -and $value.EndsWith("'")) { $value = $value.Trim("'") }
+        Set-Item -Path "Env:$key" -Value $value
+    }
+}
+
+# Carrega .env base
 $envFile = Join-Path $servicePath '.env'
 if (-not (Test-Path $envFile)) {
     Write-Error "No .env and no run-local.ps1 found in $servicePath"
     exit 1
 }
+Write-Host "Carregando $envFile..."
+Load-EnvFile -Path $envFile
 
-Get-Content $envFile | ForEach-Object {
-    $line = $_.Trim()
-    if ($line -eq '' -or $line.StartsWith('#')) { return }
-    $parts = $line -split '=', 2
-    if ($parts.Count -ne 2) { return }
-    $key = $parts[0].Trim()
-    $value = $parts[1].Trim()
-    if ($value.StartsWith('"') -and $value.EndsWith('"')) { $value = $value.Trim('"') }
-    if ($value.StartsWith("'") -and $value.EndsWith("'")) { $value = $value.Trim("'") }
-    Set-Item -Path "Env:$key" -Value $value
+# Sobrescreve com .env.local se existir
+$envLocalFile = Join-Path $servicePath '.env.local'
+if (Test-Path $envLocalFile) {
+    Write-Host "Carregando $envLocalFile (override)..."
+    Load-EnvFile -Path $envLocalFile
 }
 
 Push-Location $servicePath

@@ -10,6 +10,8 @@ Use sempre esta pasta (`Codigo/Server`) como ponto central para subir tudo.
 	- `Codigo/Server/microsservico/.env`
 	- `Codigo/Server/microsservico-b/.env`
 
+- **Nota:** Os arquivos ` .env` e ` .env.local` devem existir no diretório do serviço correspondente para que o modo escolhido funcione corretamente (os scripts e o dispatcher carregam variáveis destes arquivos). Garanta que ambos estejam presentes e preenchidos antes de rodar no modo local ou em container.
+
 ## Comandos
 
 ```powershell
@@ -36,7 +38,23 @@ Entao estes comandos funcionam de qualquer uma das tres pastas:
 
 Em qualquer caso, a acao sempre sobe os dois servicos juntos.
 
+
 ## Run-local (desenvolvimento individual)
+
+> **Importante:** O script `..\scripts\run-local.ps1` já inicia o banco Postgres necessário para execução local, portanto NÃO é necessário executar `docker-compose up -d postgres` manualmente — basta executar o script do serviço. Se preferir controlar o banco separadamente, o `docker-compose` continua disponível.
+
+**Passos para rodar local:**
+1. Rode o microserviço localmente (na pasta do serviço):
+	```
+	cd Codigo/Server/microsservico
+	..\scripts\run-local.ps1
+	```
+- **Observação:** Para executar um microserviço localmente, ambos os microserviços NÃO podem estar rodando em container (por exemplo, iniciados por `..\scripts\dev.cmd up`). Se você tiver subido os serviços via Docker, pare-os primeiro com:
+	```
+	..\scripts\dev.cmd down
+	```
+
+Se quiser rodar tudo em container, use `dev.cmd up` normalmente.
 
 Para executar um microserviço localmente (IDE/terminal) sem dependências adicionais, existe um dispatcher global que carrega o arquivo `.env` do serviço e inicia o `mvnw` no diretório do serviço.
 
@@ -53,13 +71,26 @@ cd Codigo/Server/microsservico-b
 
 - Observação: o dispatcher infere o nome do serviço a partir da pasta atual, então não é necessário passar parâmetros.
 
+
 ## Docker vs Local — importante
+
+**Resumo prático:**
+
+- Rodar tudo via Docker (`dev.cmd up` ou `docker-compose up -d --build`) é ideal para testar a integração dos microserviços juntos, principalmente após finalizar o desenvolvimento de cada um. Assim, você garante que tudo funciona em conjunto, simulando o ambiente de produção.
+- O modo `run-local` é recomendado para o desenvolvimento do dia a dia, pois permite rodar e debugar cada microserviço individualmente, com recarga rápida e sem precisar rebuildar containers a cada alteração.
+
+**Dica:** Use Docker para testes integrados e validação final. Use `run-local` para desenvolvimento rápido e iterativo.
 
 - Não execute a mesma aplicação duas vezes (container + processo local). Isso causa conflito de porta (Address already in use) e comportamento inesperado.
 - Recomendações:
-	- Modo Docker-only: use `.	ools\dev.cmd up` (ou `docker-compose up -d --build`) e abra os endpoints em `http://localhost:8080` e `http://localhost:8081`.
-	- Modo Local-only: execute apenas o Postgres via Docker (`docker-compose up -d postgres`) e rode os microserviços localmente com `..\scripts\run-local.ps1` dentro de cada pasta.
-	- Mixed mode: possível, mas ajuste os `DB_URL` conforme explicado nos exemplos (`postgres:5432` para containers, `localhost:5433` para processos locais conectando ao Postgres em container).
+	- Recomendações:
+		- Modo Docker-only: use `..\scripts\dev.cmd up` (ou `docker-compose up -d --build`) e abra os endpoints em `http://localhost:8080` e `http://localhost:8081`.
+		- Modo Local-only: o script `..\scripts\run-local.ps1` já inicia o Postgres necessário, portanto basta rodar os microserviços localmente com `..\scripts\run-local.ps1` dentro de cada pasta. Se preferir controlar o banco separadamente, inicie o Postgres com `docker-compose up -d postgres`.
+		- Mixed mode: possível, mas ajuste os `DB_URL` conforme explicado nos exemplos (`postgres:5432` para containers, `localhost:5433` para processos locais conectando ao Postgres em container).
+		- Se tiver serviços rodando em container (ex: iniciados por `..\scripts\dev.cmd up`), pare-os antes de rodar localmente com:
+			```
+			..\scripts\dev.cmd down
+			```
 
 Usar o modo local é útil para debugar e testar mudanças de código rapidamente sem rebuildar containers.
 
