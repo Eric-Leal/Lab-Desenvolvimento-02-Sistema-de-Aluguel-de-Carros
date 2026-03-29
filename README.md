@@ -18,14 +18,14 @@
 
 ## 📚 Índice
 
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Documentação e Diagramas](#documentacao-e-diagramas)
-- [Arquitetura de Microserviços](#arquitetura-de-microservicos)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Tecnologias Utilizadas](#tecnologias-utilizadas)
-- [Instalação e Execução](#instalacao-e-execucao)
-- [Equipe](#equipe)
-- [Licença e Agradecimentos](#licenca-e-agradecimentos)
+- [Sobre o Projeto](#-sobre-o-projeto)
+- [Documentação e Diagramas](#-documentação-e-diagramas)
+- [Arquitetura de Microserviços](#%EF%B8%8F-arquitetura-de-microserviços)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Tecnologias Utilizadas](#%EF%B8%8F-tecnologias-utilizadas)
+- [Instalação e Execução](#-instalação-e-execução)
+- [Equipe](#-equipe)
+- [Licença e Agradecimentos](#-licença-e-agradecimentos)
 
 ---
 
