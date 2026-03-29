@@ -62,10 +62,11 @@ function Wait-Http200 {
 try {
     switch ($Action) {
         "up" {
+            Invoke-Step { Push-Location .\gateway; .\mvnw.bat -q -DskipTests package; Pop-Location }
             Invoke-Step { Push-Location .\microsservico; .\mvnw.bat -q -DskipTests package; Pop-Location }
             Invoke-Step { Push-Location .\microsservico-b; .\mvnw.bat -q -DskipTests package; Pop-Location }
             Invoke-Step { docker compose up -d }
-            Write-Host "Servicos iniciados em http://localhost:8080 e http://localhost:8081"
+            Write-Host "Servicos iniciados. Gateway em http://localhost:8000"
         }
         "down" {
             Invoke-Step { docker compose down --remove-orphans }
@@ -74,16 +75,17 @@ try {
             docker compose logs -f --tail=200
         }
         "check" {
-            Wait-Http200 -Url "http://localhost:8080/ping"
-            Wait-Http200 -Url "http://localhost:8081/ping"
-            Write-Host "Health check OK nos dois servicos"
+            Wait-Http200 -Url "http://localhost:8000/microsservico/ping"
+            Wait-Http200 -Url "http://localhost:8000/microsservico-b/ping"
+            Write-Host "Health check OK via Gateway (Porta 8000)"
         }
         "rebuild" {
             Invoke-Step { docker compose down --remove-orphans }
+            Invoke-Step { Push-Location .\gateway; .\mvnw.bat -q -DskipTests clean package; Pop-Location }
             Invoke-Step { Push-Location .\microsservico; .\mvnw.bat -q -DskipTests clean package; Pop-Location }
             Invoke-Step { Push-Location .\microsservico-b; .\mvnw.bat -q -DskipTests clean package; Pop-Location }
             Invoke-Step { docker compose up -d }
-            Write-Host "Rebuild concluido para os dois servicos"
+            Write-Host "Rebuild concluido para os tres servicos (incluindo Gateway)"
         }
     }
 }

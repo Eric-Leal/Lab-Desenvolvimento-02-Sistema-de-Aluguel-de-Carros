@@ -39,6 +39,25 @@ services:
       postgres:
         condition: service_healthy
 
+  gateway:
+    image: eclipse-temurin:21-jdk-jammy
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    volumes:
+      - ./gateway/target:/app:ro
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - MICRONAUT_SERVER_PORT=8000
+      - PROXY_TARGETS_MICROSSERVICO=http://microsservico:8080
+      - PROXY_TARGETS_MICROSSERVICO_B=http://microsservico-b:8081
+    command: ["java", "-jar", "/app/gateway-0.1.jar"]
+    networks:
+      - app-network
+    depends_on:
+      - microsservico
+      - microsservico-b
+
   postgres:
     image: postgres:15
     restart: always
@@ -49,7 +68,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - app-network
     healthcheck:

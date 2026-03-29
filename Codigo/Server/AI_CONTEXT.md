@@ -1,99 +1,67 @@
-## Automação: Criação e Renomeação de Microsserviços
+# AI Context - Server Workspace Architecture (Gateway & Netty)
 
-Para criar ou renomear microsserviços de forma padronizada (manual ou via IA), siga o guia em:
+## 🎯 Objetivo
+Este arquivo serve como **ponto de verdade único** para assistentes de IA (como o Gemini ou ChatGPT) entenderem a arquitetura atualizada de microserviços e o fluxo de execução do monorepo.
 
-- [MICROSERVICE_TEMPLATE.md](./MICROSERVICE_TEMPLATE.md)
+---
 
-Esse arquivo traz checklist, convenções e dicas para automação.
+## 🏗️ Estrutura do Projeto
+- **`gateway` (Porta 8000)**: API Gateway baseado em Micronaut 4 e **Netty**. É o único ponto de entrada para o Frontend.
+- **`microsservico` (Porta 8080)**: Serviço A (Netty). Rota via Gateway: `/microsservico/**`.
+- **`microsservico-b` (Porta 8081)**: Serviço B (Netty). Rota via Gateway: `/microsservico-b/**`.
+- **`docker-compose.yml`**: Orquestrador global. Utiliza injeção de variáveis de ambiente no Gateway para roteamento estático.
 
-# AI Context - Server Workspace
+---
 
-## Requisitos de Ambiente
+## ⚙️ Configurações Críticas (Ambientação)
 
-- Java 21 instalado e configurado (obrigatório, outras versões podem não funcionar)
-- Variável de ambiente `JAVA_HOME` apontando para o diretório do Java 21
-- Comando `java` disponível no PATH e correspondendo ao Java 21
-- Docker Desktop em execução
-- Preencher arquivos `.env` conforme exemplos em `env-pattern`
-- Para detalhes e troubleshooting, consulte o README principal em `Codigo/Server/README.md`
+### 1. Injeção de Roteamento no Gateway
+O Gateway (**GatewayController**) não utiliza Service Discovery (Consul/Eureka). Ele usa URLs estáticas injetadas via **ambiente** no Docker Compose:
+- `PROXY_TARGETS_MICROSSERVICO=http://microsservico:8080`
+- `PROXY_TARGETS_MICROSSERVICO_B=http://microsservico-b:8081`
 
-## Principais Dependências
+Placeholder no Java: `@Client("${proxy.targets.microsservico}")`.
 
-- Micronaut 4.x (framework principal dos microsserviços)
-- Maven (gerenciador de build e dependências)
-- Java 21 (linguagem e runtime)
+### 2. Banco de Dados (Postgres)
+- **Porta Host (Sua Máquina)**: **5433** (Evite usar 5432 para não conflitar com outros bancos instalados).
+- **Porta Interna (Docker)**: **5423** (Padrão).
 
-> O projeto não utiliza frameworks de IA/ML diretamente. Caso venha a utilizar, documente aqui as bibliotecas relevantes.
+### 3. Java Runtime
+- **Obrigatório**: Java 21 (Netty otimizado).
+- **Maven**: Use sempre o `./mvnw` local para garantir consistência.
 
-## Scope
+---
 
-This file is a quick context for AI assistants and new contributors working in `Codigo/Server`.
+## 🚀 Fluxo de Execução (Single Source of Truth)
 
-## Project Layout
-
-- `microsservico`: service A (port 8080)
-- `microsservico-b`: service B (port 8081)
-- `docker-compose.yml` (in `Codigo/Server`): global orchestration for both services
-- `scripts/dev.ps1` and `scripts/dev.cmd`: global automation entrypoint
-- `env-pattern`: examples/templates for env organization across services
-
-## Run Flow (single source of truth)
-
-Run from `Codigo/Server`:
+Sempre execute os comandos a partir da raiz `Codigo/Server`:
 
 ```powershell
-.\scripts\dev.cmd up
-.\scripts\dev.cmd check
-.\scripts\dev.cmd logs
-.\scripts\dev.cmd down
+.\scripts\dev.cmd up       # Sobe tudo (Gateway + Microserviços + Postgres)
+.\scripts\dev.cmd check    # Valida se os serviços e rotas do Gateway estão UP
+.\scripts\dev.cmd rebuild  # Recompila Maven e recria containers
+.\scripts\dev.cmd down     # Para e remove os containers
 ```
 
-Local service scripts in each microservice folder just forward to the global script.
+---
 
-## Environment
+## 🔍 Endpoints de Diagnóstico
+- **Check-up Geral**: `http://localhost:8000/gateway/config` (Retorna quais URLs o Gateway está tentando rotear).
+- **Microserviço A**: `http://localhost:8000/microsservico/ping`
+- **Microserviço B**: `http://localhost:8000/microsservico-b/ping`
 
-Expected files:
+---
 
-- `microsservico/.env`
-- `microsservico-b/.env`
+## 🛠️ Convenções para IAs (Regras Rígidas)
+1. **Roteamento e Prefixos (Strip Prefix)**:
+   - O Gateway captura rotas como `@Get("/microsservico{path:.*}")`.
+   - Ele **remove o prefixo** e envia a requisição forçando uma nova URI (`java.net.URI.create(path)`).
+   - Portanto, os Controllers nos microserviços nativos **não devem** incluir o nome do serviço na rota (ex: use `@Get("/ping")` e não `@Get("/microsservico/ping")`).
+2. **Novos Serviços**: Devem ser registrados manualmente no `docker-compose.yml` e no `GatewayController.java` (seguindo a Regra #1).
+3. **Fluxos de Trabalho**:
+   - **Se o usuário estiver mexendo no Frontend (Next.js)**: Instrua-o a rodar o backend inteiro via Docker (`dev.cmd up`). O Gateway na porta 8000 resolve o CORS e os paths.
+   - **Se o usuário estiver focado no código de um Microserviço (Java)**: Instrua-o a rodar o serviço individualmente usando `run-local.ps1`. Neste modo, o serviço atende na própria porta (ex: 8080) e o Frontend apresentará erros se não for reconfigurado.
+4. **Resolução de Portas**: Em caso de "500 Internal Error", verifique se o DNS do Docker (`microsservico` ou `microsservico-b`) está resolvendo corretamente.
 
-Both services currently read:
-
-- `DB_URL`
-- `DB_USER`
-- `DB_PASSWORD`
-- `JWT_GENERATOR_SIGNATURE_SECRET`
-
-## Public Endpoints (for smoke test)
-
-- `http://localhost:8080/`
-- `http://localhost:8080/ping`
-- `http://localhost:8081/`
-- `http://localhost:8081/ping`
-
-`/ping` should return HTTP 200 on both services.
-
-## Package Structure Convention
-
-Both services already contain the package directories below (empty by design initially):
-
-- `controller`
-- `facade`
-- `service`
-- `repository`
-- `model`
-- `config`
-- `enums`
-- `exception`
-
-## Known IDE Notes
-
-- If Java files appear as `non-project file`, Maven project import in VS Code is usually stale.
-- Recommended workspace setting: auto update build configuration.
-- Source-control red folders generally indicate Git changes (not compile errors).
-
-## Team Guidance
-
-- Keep Docker orchestration at `Codigo/Server` level.
-- Avoid adding per-service compose files unless absolutely required.
-- Keep service READMEs short and point to global README.
+---
+*Para guias práticos focados em desenvolvedores humanos, consulte o [README.md](./README.md) e [MICROSERVICE_TEMPLATE.md](./MICROSERVICE_TEMPLATE.md).*

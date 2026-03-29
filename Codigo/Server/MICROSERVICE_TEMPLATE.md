@@ -1,66 +1,124 @@
-# Guia Rápido: Criação e Renomeação de Microsserviços
+# Guia Completo: Criação de um Novo Microsserviço
 
-Este documento serve como checklist e referência para criar um novo microsserviço ou renomear um existente no monorepo.
+Este documento é o guia definitivo passo a passo para criar um novo microsserviço (ex: `microsservico-c`) e integrá-lo perfeitamente à arquitetura do **API Gateway** e do **Docker**.
 
----
-
-## 1. Criar Novo Microsserviço
-
-### Passos Básicos
-1. **Copie uma pasta modelo**
-   - Use `microsservico` ou `microsservico-b` como base.
-   - Renomeie a nova pasta (ex: `microsservico-c`).
-2. **Renomeie referências internas**
-   - Ajuste o `<artifactId>` e `<name>` no `pom.xml`.
-   - Atualize o nome do pacote Java se necessário (ex: `com.example` para outro namespace).
-   - Ajuste portas e variáveis em `application.properties`.
-3. **Adicione ao orquestrador**
-   - Edite `Codigo/Server/docker-compose.yml` para incluir o novo serviço.
-   - Configure volumes, portas e dependências.
-4. **Crie/atualize arquivos `.env`**
-   - Copie de `env-pattern` e ajuste valores.
-5. **Inclua scripts de automação**
-   - Certifique-se de que os scripts em `scripts/` suportam o novo serviço.
-6. **Teste localmente**
-   - Rode `./scripts/dev.cmd up` e valide endpoints do novo serviço.
-
-### Checklist de Ajustes
-- [ ] Nome da pasta
-- [ ] `pom.xml` (`artifactId`, `name`)
-- [ ] Pacote Java (opcional)
-- [ ] `application.properties` (porta, configs)
-- [ ] `.env`
-- [ ] `docker-compose.yml`
-- [ ] Scripts de automação
-- [ ] Testes e endpoints
+Siga a ordem exata abaixo para não esquecer de nada.
 
 ---
 
-## 2. Renomear Microsserviço Existente
+## Passo 1: Copiar e Estruturar a Pasta
+A forma mais segura é copiar um microserviço que já funciona.
+1. Na pasta `Codigo/Server`, copie a pasta inteira `microsservico`.
+2. Cole e renomeie para o nome do seu novo serviço (ex: `microsservico-c`).
+3. Apague pastas geradas automaticamente (como `target` ou `bin`, se houver).
 
-1. Renomeie a pasta do serviço.
-2. Atualize `pom.xml` (`artifactId`, `name`).
-3. Ajuste referências em `docker-compose.yml` e scripts.
-4. Atualize nomes de pacotes Java se necessário.
-5. Teste toda a automação e endpoints.
+## Passo 2: Atualizar o Maven (`pom.xml`)
+Dentro da pasta do seu `microsservico-c`:
+1. Abra o arquivo `pom.xml`.
+2. Mude o nome do artefato para o nome do seu serviço:
+   ```xml
+   <artifactId>microsservico-c</artifactId>
+   <name>microsservico-c</name>
+   ```
 
----
+## Passo 3: Configurar os Arquivos `.env`
+Seu microsserviço precisa de um arquivo `.env` próprio para rodar.
+1. Dentro do `microsservico-c`, crie (ou modifique) o arquivo `.env`.
+2. **Importante:** Defina a nova porta do serviço (nenhuma porta pode se repetir na sua máquina local).
+   ```env
+   # Padrão: Porta 8080 (A), 8081 (B), 8082 (C)...
+   MICRONAUT_SERVER_PORT=8082
+   
+   # Credenciais do Banco
+   DB_URL=jdbc:postgresql://localhost:5433/aluguelcarros
+   # DB_URL=jdbc:postgresql://postgres:5432/aluguelcarros (Usado quando rodar via Docker)
+   DB_USER=seu_usuario
+   DB_PASSWORD=sua_senha
+   JWT_GENERATOR_SIGNATURE_SECRET=sua_chave_jwt_aqui
+   ```
 
-## 3. Convenções
-- Use nomes curtos, sem espaços, minúsculos e separados por hífen ou underline.
-- Mantenha a estrutura de pacotes e pastas igual ao modelo.
-- Sempre atualize o orquestrador e scripts globais.
+## Passo 4: Atualizar o `application.properties`
+No caminho `microsservico-c/src/main/resources/application.properties`:
+1. Mude o nome da aplicação para Micronaut registrar corretamente:
+   ```properties
+   micronaut.application.name=microsservico-c
+   ```
 
----
+## Passo 5: Configurar o Docker Compose (`docker-compose.yml`)
+Esta é uma das etapas mais críticas. Abra o arquivo `docker-compose.yml` que fica na raiz do projeto e faça duas coisas:
 
-## 4. Dicas para Automação/IA
-- A IA pode seguir este checklist para criar ou renomear serviços automaticamente.
-- Se necessário, crie scripts para clonar e ajustar nomes automaticamente.
-- Sempre valide o funcionamento após alterações.
+**A) Adicione o bloco do seu novo serviço:**
+```yaml
+  microsservico-c:
+    build:
+      context: ./microsservico-c
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - DB_URL=jdbc:postgresql://postgres:5432/aluguelcarros
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_GENERATOR_SIGNATURE_SECRET=${JWT_GENERATOR_SIGNATURE_SECRET}
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+```
 
----
+**B) Injetar a URL no Gateway:**
+Ainda no `docker-compose.yml`, procure o bloco do serviço `gateway` e adicione a variável para que ele saiba onde achar o seu novo container:
+```yaml
+  gateway:
+    # ... outras configurações ...
+    environment:
+      - PROXY_TARGETS_MICROSSERVICO=http://microsservico:8080
+      - PROXY_TARGETS_MICROSSERVICO_B=http://microsservico-b:8081
+      - PROXY_TARGETS_MICROSSERVICO_C=http://microsservico-c:8082 # NOVO!
+```
 
-## 5. Referências
-- Consulte o README principal para requisitos de ambiente.
-- Veja exemplos em `microsservico` e `microsservico-b`.
-- Dúvidas? Consulte o AI_CONTEXT.md ou peça ajuda à equipe.
+## Passo 6: Registrar o Controller no Gateway
+Com a nova arquitetura modular fatiada, não temos mais um "super-arquivo" com tudo misturado. Cada microserviço possui um _Controller_ simples para si.
+
+No projeto do Gateway (`gateway/src/main/java/gateway/controller`), crie o arquivo **`MicrosservicoCController.java`**:
+
+```java
+package gateway.controller;
+
+import gateway.service.ProxyFacadeService;
+import io.micronaut.core.annotation.Nullable;
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.MutableHttpResponse;
+import io.micronaut.http.annotation.*;
+import io.micronaut.http.client.ProxyHttpClient;
+import io.micronaut.http.client.annotation.Client;
+import jakarta.inject.Inject;
+import org.reactivestreams.Publisher;
+
+@Controller("/microsservico-c")
+public class MicrosservicoCController {
+
+    @Inject
+    @Client("${proxy.targets.microsservico-c}")
+    private ProxyHttpClient microCClient;
+
+    @Inject
+    private ProxyFacadeService proxyFacade;
+
+    @Get("{path:.*}")
+    public Publisher<MutableHttpResponse<?>> proxyGet(HttpRequest<?> request, @Nullable String path) {
+        return proxyFacade.forward(microCClient, request, path);
+    }
+
+    // Copie também o mapeamento genérico para @Post, @Put, @Delete e @Options usando a mesma sintaxe delegando para proxyFacade...
+}
+```
+**LEMBRETE (Strip Prefix)**: Como a anotação padrão é `@Controller("/microsservico-c")`, o Gateway corta o `/microsservico-c` da URL antes de enviar para o `proxyFacade`. Quando você criar o código Java no seu novo serviço, declare a rota a partir da raiz `/`. (Exemplo: `@Get("/clientes")`).
+
+## Passo 7: Compilar e Rodar o Front
+Pronto! Abra o terminal na raiz do servidor e recompile tudo para que o Docker construa a nova máquina:
+```powershell
+.\scripts\dev.cmd rebuild
+```
+Agora o Gateway responderá perfeitamente na porta 8000 para as rotas do seu novo serviço!

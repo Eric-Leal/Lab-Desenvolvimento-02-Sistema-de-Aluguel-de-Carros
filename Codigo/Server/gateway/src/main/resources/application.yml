@@ -1,0 +1,33 @@
+micronaut:
+  application:
+    name: gateway
+  server:
+    port: 8000
+    cors:
+      enabled: true
+      configurations:
+        default:
+          allowed-origins:
+            - "http://localhost:3000"
+            - "http://127.0.0.1:3000"
+            - "http://[::1]:3000"
+          allowed-methods:
+            - "GET"
+            - "POST"
+            - "PUT"
+            - "DELETE"
+            - "OPTIONS"
+            - "PATCH"
+          allowed-headers:
+            - "*"
+          exposed-headers:
+            - "*"
+  http:
+    client:
+      read-timeout: 30s
+
+# Propriedades de roteamento estatico (Docker DNS)
+proxy:
+  targets:
+    microsservico: "http://microsservico:8080"
+    microsservico-b: "http://microsservico-b:8081"
