@@ -8,10 +8,10 @@ import java.util.Map;
 @Controller("/gateway")
 public class GatewayConfigController {
 
-    @Value("${proxy.targets.microsservico}")
+    @Value("${proxy.targets.usersservice}")
     private String targetA;
 
-    @Value("${proxy.targets.microsservico-b}")
+    @Value("${proxy.targets.microsservicob}")
     private String targetB;
 
     @Get("/config")

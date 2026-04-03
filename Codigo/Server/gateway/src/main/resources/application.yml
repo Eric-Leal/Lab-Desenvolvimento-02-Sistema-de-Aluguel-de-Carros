@@ -29,5 +29,5 @@ micronaut:
 # Propriedades de roteamento estatico (Docker DNS)
 proxy:
   targets:
-    microsservico: "http://microsservico:8080"
-    microsservico-b: "http://microsservico-b:8081"
+    usersservice: "http://usersService:8080"
+    microsservicob: "http://microsservico-b:8081"

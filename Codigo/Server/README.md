@@ -7,7 +7,7 @@ Use sempre esta pasta (`Codigo/Server`) como ponto central para subir tudo.
 - Java 21
 - Docker Desktop em execução
 - Credenciais preenchidas em:
-	- `Codigo/Server/microsservico/.env`
+	- `Codigo/Server/usersService/.env`
 	- `Codigo/Server/microsservico-b/.env`
 
 - **Nota:** Os arquivos `.env` e `.env.local` devem existir no diretório do serviço correspondente para que o modo escolhido funcione corretamente.
@@ -40,7 +40,7 @@ A partir de agora, o **Gateway centraliza todos os Microserviços na porta 8000*
 - **Diagnóstico**: `http://localhost:8000/gateway/config` (Verifica se o Gateway mapeou as rotas corretamente para o ambiente Docker).
 
 ### Endpoints (Via Gateway):
-- `http://localhost:8000/microsservico/ping`
+- `http://localhost:8000/usersService/ping`
 - `http://localhost:8000/microsservico-b/ping`
 
 ## Banco de Dados (Postgres)
@@ -65,7 +65,7 @@ Este repositório possui arquivos especiais para ajudar Assistentes de IA (como 
 Se esta for a sua primeira execução:
 1. Instale o **Java 21**. Verifique com `java -version`.
 2. Garanta que o Docker Desktop está aberto e rodando.
-3. Crie os arquivos `.env` dentro de `microsservico` e `microsservico-b` copiando o modelo de `env-pattern`.
+3. Crie os arquivos `.env` dentro de `usersService` e `microsservico-b` copiando o modelo de `env-pattern`.
 4. Abra um terminal na pasta onde este README está e rode:
    ```powershell
    .\scripts\dev.cmd rebuild
@@ -80,9 +80,9 @@ O **Gateway** (rodando na porta 8000) é a única interface que o mundo externo 
 
 ### Como funciona o Roteamento (Strip Prefix)?
 O Gateway pega o início do caminho da URL para saber para quem direcionar a requisição e **remove esse prefixo** antes de encaminhar.
-- O Frontend pede: `http://localhost:8000/microsservico/ping`
-- O Gateway **corta** o `/microsservico` da frente.
-- O Gateway manda para o Microserviço A: `http://microsservico:8080/ping`
+- O Frontend pede: `http://localhost:8000/usersService/ping`
+- O Gateway **corta** o `/usersService` da frente.
+- O Gateway manda para o Microserviço A: `http://usersService:8080/ping`
 
 Isso significa que dentro de cada um dos seus microserviços, as rotas começam da **raiz (`/`)**. Você não precisa declarar os nomes dos microserviços nas anotações de rota do backend (ex: no Controller do Java, a rota é só `@Get("/ping")`).
 
@@ -102,7 +102,7 @@ O projeto usa abordagens diferentes dependendo do seu foco no dia para evitar co
 ### B) Desenvolvendo/Codando no Back-end (Java/Micronaut)
 Nestas horas, subir a cada mudança no Docker atrapalha:
 1. **Derrube o Docker**: Rode `.\scripts\dev.cmd down`.
-2. **Suba Pelo Script Local**: Vá pelo terminal na pasta exata do microserviço que você quer trabalhar (ex: `cd microsservico`) e rode `..\scripts\run-local.ps1`.
+2. **Suba Pelo Script Local**: Vá pelo terminal na pasta exata do microserviço que você quer trabalhar (ex: `cd usersService`) e rode `..\scripts\run-local.ps1`.
 3. **Por que isso é bom?** O programa roda na porta `8080` de forma nativa. O próprio script local enxerga que o Docker está derrubado e **sobe o Banco de Dados (Postgres)** automaticamente, mapeando a porta na `5433`. Você testa as rotas no seu navegador como `http://localhost:8080/sua-rota` e altera o Java bem mais rápido.
 *(Atenção: Enquanto estiver neste modo, o Gateway não estará de pé, portanto o teste via Front-end (Porta 3000) vai gerar erro de "conexão recusada" - isso é esperado!)*
 
@@ -111,7 +111,10 @@ Nestas horas, subir a cada mudança no Docker atrapalha:
 ## 🐞 Troubleshooting
 
 - **500 Internal Server Error: No available services**:
-	- O Gateway falhou em resolver o DNS do container. Verifique se os containers `microsservico` e `microsservico-b` estão UP via `docker ps`.
+	- O Gateway falhou em resolver o DNS do container. Verifique se os containers `usersService` e `microsservico-b` estão UP via `docker ps`.
+- **500 Internal Server Error: Missing bean / Failed to inject**:
+    - Geralmente causado por erro de mapeamento entre `docker-compose.yml` e o `application.yml` do Gateway. 
+    - Verifique se a variável `PROXY_TARGETS_NOMESERVICO` no Docker casa com `${proxy.targets.nomeservico}` no Java. Evite CamelCase ou hífens nessas chaves específicas.
 - **404 Not Found** na raiz (8000/): 
     - Comportamento esperado. O Gateway não possui página inicial, apenas rotas para os microserviços.
 - **Conflito de porta (`Address already in use`)**:

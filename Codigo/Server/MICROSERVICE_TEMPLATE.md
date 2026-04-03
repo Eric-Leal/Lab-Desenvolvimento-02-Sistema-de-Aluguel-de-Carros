@@ -17,8 +17,12 @@ Dentro da pasta do seu `microsservico-c`:
 1. Abra o arquivo `pom.xml`.
 2. Mude o nome do artefato para o nome do seu serviço:
    ```xml
-   <artifactId>microsservico-c</artifactId>
-   <name>microsservico-c</name>
+    <artifactId>microsservico-c</artifactId>
+    <name>microsservico-c</name>
+    ```
+3. **Importante:** Verifique se há argumentos de compilador no final do arquivo:
+   ```xml
+   <arg>-Amicronaut.processing.module=microsservico-c</arg>
    ```
 
 ## Passo 3: Configurar os Arquivos `.env`
@@ -74,9 +78,11 @@ Ainda no `docker-compose.yml`, procure o bloco do serviço `gateway` e adicione 
     # ... outras configurações ...
     environment:
       - PROXY_TARGETS_MICROSSERVICO=http://microsservico:8080
-      - PROXY_TARGETS_MICROSSERVICO_B=http://microsservico-b:8081
-      - PROXY_TARGETS_MICROSSERVICO_C=http://microsservico-c:8082 # NOVO!
+      - PROXY_TARGETS_MICROSSERVICOB=http://microsservico-b:8081
+      - PROXY_TARGETS_MICROSSERVICOC=http://microsservico-c:8082 # NOVO!
 ```
+> [!TIP]
+> **DICA DE OURO:** Use nomes sem hífens ou camelCase para as chaves de proxy no YAML (ex: `microsservico-c` vira `microsservicoc` no environment) para evitar que o Micronaut se perca na conversão de Relaxed Binding.
 
 ## Passo 6: Registrar o Controller no Gateway
 Com a nova arquitetura modular fatiada, não temos mais um "super-arquivo" com tudo misturado. Cada microserviço possui um _Controller_ simples para si.
@@ -116,7 +122,12 @@ public class MicrosservicoCController {
 ```
 **LEMBRETE (Strip Prefix)**: Como a anotação padrão é `@Controller("/microsservico-c")`, o Gateway corta o `/microsservico-c` da URL antes de enviar para o `proxyFacade`. Quando você criar o código Java no seu novo serviço, declare a rota a partir da raiz `/`. (Exemplo: `@Get("/clientes")`).
 
-## Passo 7: Compilar e Rodar o Front
+## Passo 7: Atualizar o GatewayConfigController (Opcional mas Recomendado)
+Se o seu projeto possui um `GatewayConfigController.java` para diagnóstico:
+1. Adicione a nova `@Value` apontando para `${proxy.targets.microsservicoc}`.
+2. Adicione o novo campo no retorno do método `getConfig()`.
+
+## Passo 8: Compilar e Rodar o Front
 Pronto! Abra o terminal na raiz do servidor e recompile tudo para que o Docker construa a nova máquina:
 ```powershell
 .\scripts\dev.cmd rebuild

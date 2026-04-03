@@ -3,7 +3,7 @@ Global dispatcher: detect current microservice and run its local runner.
 
 Usage:
   From a microservice folder (recommended):
-    cd Codigo/Server/microsservico
+    cd Codigo/Server/usersService
     ..\scripts\run-local.ps1
 
   Or from repo root, pass service name:

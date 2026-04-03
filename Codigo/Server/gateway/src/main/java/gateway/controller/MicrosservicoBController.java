@@ -14,7 +14,7 @@ import org.reactivestreams.Publisher;
 public class MicrosservicoBController {
 
     @Inject
-    @Client("${proxy.targets.microsservico-b}")
+    @Client("${proxy.targets.microsservicob}")
     private ProxyHttpClient microBClient;
 
     @Inject

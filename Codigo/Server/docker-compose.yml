@@ -1,18 +1,18 @@
 services:
-  microsservico:
+  usersService:
     image: eclipse-temurin:21-jdk-jammy
     ports:
       - "8080:8080"
     restart: unless-stopped
     volumes:
-      - ./microsservico/target:/app:ro
+      - ./usersService/target:/app:ro
     env_file:
-      - ./microsservico/.env
+      - ./usersService/.env
     environment:
       - JAVA_OPTS=-Xmx512m
       - JAVA_TOOL_OPTIONS=-Djava.net.preferIPv4Stack=true
       - MICRONAUT_SERVER_PORT=8080
-    command: ["java", "-jar", "/app/microsservico-0.1.jar"]
+    command: ["java", "-jar", "/app/usersService-0.1.jar"]
     networks:
       - app-network
     depends_on:
@@ -49,13 +49,13 @@ services:
     environment:
       - JAVA_OPTS=-Xmx512m
       - MICRONAUT_SERVER_PORT=8000
-      - PROXY_TARGETS_MICROSSERVICO=http://microsservico:8080
-      - PROXY_TARGETS_MICROSSERVICO_B=http://microsservico-b:8081
+      - PROXY_TARGETS_USERSSERVICE=http://usersService:8080
+      - PROXY_TARGETS_MICROSSERVICOB=http://microsservico-b:8081
     command: ["java", "-jar", "/app/gateway-0.1.jar"]
     networks:
       - app-network
     depends_on:
-      - microsservico
+      - usersService
       - microsservico-b
 
   postgres:

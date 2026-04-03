@@ -10,34 +10,34 @@ import io.micronaut.http.client.annotation.Client;
 import jakarta.inject.Inject;
 import org.reactivestreams.Publisher;
 
-@Controller("/microsservico")
-public class MicrosservicoAController {
+@Controller("/usersService")
+public class UsersServiceController {
 
     @Inject
-    @Client("${proxy.targets.microsservico}")
-    private ProxyHttpClient microAClient;
+    @Client("${proxy.targets.usersservice}")
+    private ProxyHttpClient usersServiceClient;
 
     @Inject
     private ProxyFacadeService proxyFacade;
 
     @Get("{path:.*}")
     public Publisher<MutableHttpResponse<?>> proxyGet(HttpRequest<?> request, @Nullable String path) {
-        return proxyFacade.forward(microAClient, request, path);
+        return proxyFacade.forward(usersServiceClient, request, path);
     }
 
     @Post("{path:.*}")
     public Publisher<MutableHttpResponse<?>> proxyPost(HttpRequest<?> request, @Nullable String path) {
-        return proxyFacade.forward(microAClient, request, path);
+        return proxyFacade.forward(usersServiceClient, request, path);
     }
 
     @Put("{path:.*}")
     public Publisher<MutableHttpResponse<?>> proxyPut(HttpRequest<?> request, @Nullable String path) {
-        return proxyFacade.forward(microAClient, request, path);
+        return proxyFacade.forward(usersServiceClient, request, path);
     }
 
     @Delete("{path:.*}")
     public Publisher<MutableHttpResponse<?>> proxyDelete(HttpRequest<?> request, @Nullable String path) {
-        return proxyFacade.forward(microAClient, request, path);
+        return proxyFacade.forward(usersServiceClient, request, path);
     }
 
     @Options("{path:.*}")
