@@ -2,9 +2,9 @@
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.import.maven.enabled": true,
     "java.project.sourcePaths": [
-        "Codigo/Server/microsservico/src/main/java",
-        "Codigo/Server/microsservico/src/test/java",
-        "Codigo/Server/microsservico-b/src/main/java",
-        "Codigo/Server/microsservico-b/src/test/java"
+        "Codigo/server/usersService/src/main/java",
+        "Codigo/server/usersService/src/test/java",
+        "Codigo/server/microsservico-b/src/main/java",
+        "Codigo/server/microsservico-b/src/test/java"
     ]
 }

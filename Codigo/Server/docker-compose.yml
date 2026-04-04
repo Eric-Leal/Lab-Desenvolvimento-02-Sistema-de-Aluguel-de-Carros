@@ -78,6 +78,18 @@ services:
       retries: 10
       start_period: 10s
 
+  pgweb:
+    image: sosedoff/pgweb
+    restart: always
+    ports:
+      - "8090:8081"
+    environment:
+      - DATABASE_URL=postgres://admin:admin@postgres:5432/aluguel-carro?sslmode=disable
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
 volumes:
   postgres_data:
     driver: local
