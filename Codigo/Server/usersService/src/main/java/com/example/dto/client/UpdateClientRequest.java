@@ -1,6 +1,6 @@
 package com.example.dto.client;
 
-import com.example.dto.common.AddressDTO;
+import com.example.dto.common.UpdateAddressDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.micronaut.core.annotation.Introspected;
 import jakarta.validation.Valid;
@@ -26,5 +26,5 @@ public class UpdateClientRequest {
 
     @Valid
     @JsonProperty("endereço")
-    private AddressDTO address;
+    private UpdateAddressDTO address;
 }

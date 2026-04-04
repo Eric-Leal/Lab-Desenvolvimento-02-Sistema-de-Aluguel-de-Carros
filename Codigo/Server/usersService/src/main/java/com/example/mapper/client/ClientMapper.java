@@ -3,7 +3,8 @@ package com.example.mapper.client;
 import com.example.dto.client.ClientResponse;
 import com.example.dto.client.CreateClientRequest;
 import com.example.dto.client.UpdateClientRequest;
-import com.example.dto.common.AddressDTO;
+import com.example.dto.common.CreateAddressDTO;
+import com.example.dto.common.UpdateAddressDTO;
 import com.example.dto.common.EmpregoDTO;
 import com.example.model.Address;
 import com.example.model.client.Client;
@@ -51,7 +52,10 @@ public interface ClientMapper {
     @Mapping(target = "empregos", ignore = true)
     void updateEntity(UpdateClientRequest request, @MappingTarget Client client);
 
-    Address toAddress(AddressDTO dto);
+    Address toAddress(CreateAddressDTO dto);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateAddress(UpdateAddressDTO dto, @MappingTarget Address address);
 
     @AfterMapping
     default void finalizeEntity(@MappingTarget Client client) {

@@ -12,7 +12,10 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Patch;
 import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.Post;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.exceptions.HttpStatusException;
 import io.micronaut.security.annotation.Secured;
+import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.rules.SecurityRule;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -46,13 +49,19 @@ public class AgentController {
 
     @Patch("/{id}")
     @Secured(SecurityRule.IS_AUTHENTICATED)
-    public HttpResponse<AgentResponse> update(@PathVariable UUID id, @Body @Valid UpdateAgentRequest request) {
+    public HttpResponse<AgentResponse> update(@PathVariable UUID id, @Body @Valid UpdateAgentRequest request, Authentication authentication) {
+        if (!id.toString().equals(authentication.getName())) {
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para fazer isso.");
+        }
         return HttpResponse.ok(agentService.updateAgent(id, request));
     }
 
     @Delete("/{id}")
     @Secured(SecurityRule.IS_AUTHENTICATED)
-    public HttpResponse<Void> delete(@PathVariable UUID id) {
+    public HttpResponse<Void> delete(@PathVariable UUID id, Authentication authentication) {
+        if (!id.toString().equals(authentication.getName())) {
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para fazer isso.");
+        }
         agentService.deleteAgent(id);
         return HttpResponse.noContent();
     }

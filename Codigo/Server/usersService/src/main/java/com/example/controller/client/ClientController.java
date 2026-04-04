@@ -13,7 +13,10 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Patch;
 import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.Post;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.exceptions.HttpStatusException;
 import io.micronaut.security.annotation.Secured;
+import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.rules.SecurityRule;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -47,20 +50,30 @@ public class ClientController {
 
     @Patch("/{id}")
     @Secured(SecurityRule.IS_AUTHENTICATED)
-    public HttpResponse<ClientResponse> update(@PathVariable UUID id, @Body @Valid UpdateClientRequest request) {
+    public HttpResponse<ClientResponse> update(@PathVariable UUID id, @Body @Valid UpdateClientRequest request, Authentication authentication) {
+        if (!id.toString().equals(authentication.getName())) {
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para fazer isso.");
+        }
         return HttpResponse.ok(clientService.update(id, request));
     }
 
     @Patch("/{clientId}/emprego/{empregoId}")
     @Secured(SecurityRule.IS_AUTHENTICATED)
-    public HttpResponse<Void> updateEmprego(@PathVariable UUID clientId, @PathVariable UUID empregoId, @Body @Valid EmpregoDTO request) {
+    public HttpResponse<Void> updateEmprego(@PathVariable UUID clientId, @PathVariable UUID empregoId,
+            @Body @Valid EmpregoDTO request, Authentication authentication) {
+        if (!clientId.toString().equals(authentication.getName())) {
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para fazer isso.");
+        }
         clientService.updateEmprego(clientId, empregoId, request);
         return HttpResponse.ok();
     }
 
     @Delete("/{id}")
     @Secured(SecurityRule.IS_AUTHENTICATED)
-    public HttpResponse<Void> delete(@PathVariable UUID id) {
+    public HttpResponse<Void> delete(@PathVariable UUID id, Authentication authentication) {
+        if (!id.toString().equals(authentication.getName())) {
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para fazer isso.");
+        }
         clientService.delete(id);
         return HttpResponse.noContent();
     }

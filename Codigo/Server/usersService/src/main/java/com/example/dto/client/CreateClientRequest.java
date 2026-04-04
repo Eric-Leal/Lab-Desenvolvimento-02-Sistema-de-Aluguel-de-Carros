@@ -1,6 +1,6 @@
 package com.example.dto.client;
 
-import com.example.dto.common.AddressDTO;
+import com.example.dto.common.CreateAddressDTO;
 import com.example.dto.common.EmpregoDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.micronaut.core.annotation.Introspected;
@@ -42,7 +42,7 @@ public class CreateClientRequest {
     @Valid
     @NotNull(message = "O endereço é obrigatório")
     @JsonProperty("endereço")
-    private AddressDTO address;
+    private CreateAddressDTO address;
 
     private List<EmpregoDTO> empregos;
 }

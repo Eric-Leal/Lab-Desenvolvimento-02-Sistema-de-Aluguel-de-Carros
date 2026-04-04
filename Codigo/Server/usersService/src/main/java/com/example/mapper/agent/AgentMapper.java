@@ -3,7 +3,8 @@ package com.example.mapper.agent;
 import com.example.dto.agent.AgentResponse;
 import com.example.dto.agent.CreateAgentRequest;
 import com.example.dto.agent.UpdateAgentRequest;
-import com.example.dto.common.AddressDTO;
+import com.example.dto.common.CreateAddressDTO;
+import com.example.dto.common.UpdateAddressDTO;
 import com.example.model.Address;
 import com.example.model.agent.Agent;
 import org.mapstruct.BeanMapping;
@@ -27,7 +28,10 @@ public interface AgentMapper {
 
     List<AgentResponse> toResponseList(List<Agent> agents);
 
-    Address toAddress(AddressDTO dto);
+    Address toAddress(CreateAddressDTO dto);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateAddress(UpdateAddressDTO dto, @MappingTarget Address address);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)

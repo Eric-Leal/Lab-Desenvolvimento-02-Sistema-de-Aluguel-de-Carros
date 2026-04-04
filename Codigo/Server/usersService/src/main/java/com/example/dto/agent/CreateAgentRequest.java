@@ -1,6 +1,6 @@
 package com.example.dto.agent;
 
-import com.example.dto.common.AddressDTO;
+import com.example.dto.common.CreateAddressDTO;
 import com.example.enums.TipoAgente;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -38,5 +38,5 @@ public class CreateAgentRequest {
     @Valid
     @NotNull(message = "O endereço é obrigatório")
     @JsonProperty("endereço")
-    private AddressDTO address;
+    private CreateAddressDTO address;
 }

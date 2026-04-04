@@ -1,6 +1,6 @@
 package com.example.dto.agent;
 
-import com.example.dto.common.AddressDTO;
+import com.example.dto.common.UpdateAddressDTO;
 import com.example.enums.TipoAgente;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.micronaut.core.annotation.Introspected;
@@ -24,5 +24,5 @@ public class UpdateAgentRequest {
 
     @Valid
     @JsonProperty("endereço")
-    private AddressDTO address;
+    private UpdateAddressDTO address;
 }

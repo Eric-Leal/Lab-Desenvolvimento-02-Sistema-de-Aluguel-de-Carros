@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddressDTO {
+public class UpdateAddressDTO {
     private String logradouro;
     private String numero;
     private String complemento;
