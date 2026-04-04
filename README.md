@@ -154,12 +154,30 @@ Codigo/server/[serviço]/
 - **Micronaut 4**: Framework ultrarrápido ideal para microserviços.
 - **Netty**: Servidor reativo assíncrono.
 - **PostgreSQL**: Persistência de dados (Porta Host `5433` / Docker `5432`).
+- **PGWeb (Database Studio)**: Interface visual para o banco de dados (Porta `8090`).
 - **Docker & Docker Compose**: Orquestração de todo o ecossistema.
 
 ### Front-end
 - **Next.js & React**: Construção das telas.
 - **TypeScript**: Tipagem forte.
 - **TailwindCSS**: Estilização Utility-First.
+
+---
+
+## 🗄️ Database Studio (PGWeb)
+
+O projeto inclui o **PGWeb**, uma ferramenta visual leve que permite gerenciar e visualizar seu banco de dados PostgreSQL diretamente no navegador, sem precisar instalar softwares como DBeaver ou pgAdmin.
+
+### Como Acessar
+Sempre que os containers estiverem rodando (via `scripts/run-local.ps1` ou `docker-compose up`), você pode acessar:
+- **URL**: [http://localhost:8090](http://localhost:8090)
+- **Conexão**: A conexão é feita **automaticamente** pelo container (utilizando a `DATABASE_URL` interna).
+
+### Funcionalidades principais:
+1.  **Visualizar Tabelas**: Na barra lateral esquerda, você encontrará tabelas como `agent`, `client`, `address`, `emprego`, etc.
+2.  **Explorar Dados**: Clique em uma tabela para ver todos os registros inseridos.
+3.  **Executar SQL**: Use a aba **"Query"** para rodar comandos SQL manualmente.
+4.  **Exportação**: Você pode exportar tabelas inteiras para formatos como CSV ou JSON.
 
 ---
 
