@@ -64,7 +64,8 @@ try {
         "up" {
             Invoke-Step { Push-Location .\gateway; .\mvnw.bat -q -DskipTests package; Pop-Location }
             Invoke-Step { Push-Location .\usersService; .\mvnw.bat -q -DskipTests package; Pop-Location }
-            Invoke-Step { Push-Location .\microsservico-b; .\mvnw.bat -q -DskipTests package; Pop-Location }
+            Invoke-Step { Push-Location .\vehiclesService; .\mvnw.bat -q -DskipTests package; Pop-Location }
+            Invoke-Step { Push-Location .\rentalsService; .\mvnw.bat -q -DskipTests package; Pop-Location }
             Invoke-Step { docker compose up -d }
             Write-Host "Servicos iniciados. Gateway em http://localhost:8000"
         }
@@ -76,16 +77,18 @@ try {
         }
         "check" {
             Wait-Http200 -Url "http://localhost:8000/usersService/ping"
-            Wait-Http200 -Url "http://localhost:8000/microsservico-b/ping"
+            Wait-Http200 -Url "http://localhost:8000/vehiclesService/ping"
+            Wait-Http200 -Url "http://localhost:8000/rentalsService/ping"
             Write-Host "Health check OK via Gateway (Porta 8000)"
         }
         "rebuild" {
             Invoke-Step { docker compose down --remove-orphans }
             Invoke-Step { Push-Location .\gateway; .\mvnw.bat -q -DskipTests clean package; Pop-Location }
             Invoke-Step { Push-Location .\usersService; .\mvnw.bat -q -DskipTests clean package; Pop-Location }
-            Invoke-Step { Push-Location .\microsservico-b; .\mvnw.bat -q -DskipTests clean package; Pop-Location }
+            Invoke-Step { Push-Location .\vehiclesService; .\mvnw.bat -q -DskipTests clean package; Pop-Location }
+            Invoke-Step { Push-Location .\rentalsService; .\mvnw.bat -q -DskipTests clean package; Pop-Location }
             Invoke-Step { docker compose up -d }
-            Write-Host "Rebuild concluido para os tres servicos (incluindo Gateway)"
+            Write-Host "Rebuild concluido para todos os servicos (incluindo Gateway)"
         }
     }
 }
