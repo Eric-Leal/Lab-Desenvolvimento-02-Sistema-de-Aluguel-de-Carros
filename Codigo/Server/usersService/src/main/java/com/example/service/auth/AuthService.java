@@ -2,6 +2,7 @@ package com.example.service.auth;
 
 import com.example.dto.auth.LoginRequest;
 import com.example.dto.auth.LoginResponse;
+import com.example.exception.InvalidCredentialsException;
 import com.example.model.User;
 import com.example.repository.agent.AgentRepository;
 import com.example.repository.client.ClientRepository;
@@ -31,13 +32,13 @@ public class AuthService {
         }
 
         if (userOpt.isEmpty()) {
-            throw new RuntimeException("Email ou senha inválidos.");
+            throw new InvalidCredentialsException("Email ou senha inválidos.");
         }
 
         User user = userOpt.get();
 
         if (!BCrypt.checkpw(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Email ou senha inválidos.");
+            throw new InvalidCredentialsException("Email ou senha inválidos.");
         }
 
         Map<String, Object> claims = Map.of(

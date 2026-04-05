@@ -3,15 +3,15 @@ package com.example.service.agent;
 import com.example.dto.agent.AgentResponse;
 import com.example.dto.agent.CreateAgentRequest;
 import com.example.dto.agent.UpdateAgentRequest;
+import com.example.exception.BusinessException;
 import com.example.exception.DocumentAlreadyInUseException;
 import com.example.exception.EmailAlreadyInUseException;
+import com.example.exception.ResourceNotFoundException;
 import com.example.mapper.agent.AgentMapper;
 import com.example.model.agent.Agent;
 import com.example.repository.agent.AgentRepository;
 import com.example.util.PasswordValidator;
 import io.micronaut.context.annotation.Executable;
-import io.micronaut.http.HttpStatus;
-import io.micronaut.http.exceptions.HttpStatusException;
 import jakarta.inject.Singleton;
 import lombok.AllArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
@@ -29,7 +29,7 @@ public class AgentService {
     @Executable
     public AgentResponse createAgent(CreateAgentRequest request) {
         if (request == null) {
-            throw new RuntimeException("Dados do agente não fornecidos");
+            throw new BusinessException("Dados do agente não fornecidos");
         }
 
         PasswordValidator.validate(request.getPassword());
@@ -52,7 +52,7 @@ public class AgentService {
     @Executable
     public AgentResponse updateAgent(UUID id, UpdateAgentRequest request) {
         Agent agent = agentRepository.findById(id)
-            .orElseThrow(() -> new HttpStatusException(HttpStatus.NOT_FOUND, "Agente não encontrado."));
+            .orElseThrow(() -> new ResourceNotFoundException("Agente", id.toString()));
 
         agentMapper.updateEntity(request, agent);
 
@@ -62,7 +62,7 @@ public class AgentService {
     @Executable
     public void deleteAgent(UUID id) {
         agentRepository.findById(id)
-            .orElseThrow(() -> new HttpStatusException(HttpStatus.NOT_FOUND, "Agente não encontrado."));
+            .orElseThrow(() -> new ResourceNotFoundException("Agente", id.toString()));
 
         agentRepository.deleteById(id);
     }
@@ -71,7 +71,7 @@ public class AgentService {
     public AgentResponse findById(UUID id) {
         return agentRepository.findById(id)
             .map(agentMapper::toResponse)
-            .orElseThrow(() -> new HttpStatusException(HttpStatus.NOT_FOUND, "Agente não encontrado."));
+            .orElseThrow(() -> new ResourceNotFoundException("Agente", id.toString()));
     }
 
     @Executable

@@ -4,8 +4,10 @@ import com.example.dto.client.ClientResponse;
 import com.example.dto.client.CreateClientRequest;
 import com.example.dto.client.UpdateClientRequest;
 import com.example.dto.common.EmpregoDTO;
+import com.example.exception.BusinessException;
 import com.example.exception.DocumentAlreadyInUseException;
 import com.example.exception.EmailAlreadyInUseException;
+import com.example.exception.ResourceNotFoundException;
 import com.example.mapper.client.ClientMapper;
 import com.example.model.client.Client;
 import com.example.model.client.Emprego;
@@ -13,8 +15,6 @@ import com.example.repository.client.ClientRepository;
 import com.example.repository.client.EmpregoRepository;
 import com.example.util.PasswordValidator;
 import io.micronaut.context.annotation.Executable;
-import io.micronaut.http.HttpStatus;
-import io.micronaut.http.exceptions.HttpStatusException;
 import jakarta.inject.Singleton;
 import lombok.AllArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
@@ -33,7 +33,7 @@ public class ClientService {
     @Executable
     public ClientResponse create(CreateClientRequest request) {
         if (request == null) {
-            throw new RuntimeException("Dados do cliente não fornecidos");
+            throw new BusinessException("Dados do cliente não fornecidos");
         }
 
         PasswordValidator.validate(request.getPassword());
@@ -47,7 +47,7 @@ public class ClientService {
         }
 
         if (request.getEmpregos() != null && request.getEmpregos().size() > 3) {
-            throw new RuntimeException("Um cliente só pode ter no máximo 3 empregos cadastrados.");
+            throw new BusinessException("Um cliente só pode ter no máximo 3 empregos cadastrados.");
         }
 
         Client client = clientMapper.toEntity(request);
@@ -60,7 +60,7 @@ public class ClientService {
     @Executable
     public ClientResponse update(UUID id, UpdateClientRequest request) {
         Client client = clientRepository.findById(id)
-            .orElseThrow(() -> new HttpStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado."));
+            .orElseThrow(() -> new ResourceNotFoundException("Cliente", id.toString()));
 
         clientMapper.updateEntity(request, client);
 
@@ -70,10 +70,10 @@ public class ClientService {
     @Executable
     public void updateEmprego(UUID clientId, UUID empregoId, EmpregoDTO request) {
         clientRepository.findById(clientId)
-            .orElseThrow(() -> new HttpStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado."));
+            .orElseThrow(() -> new ResourceNotFoundException("Cliente", clientId.toString()));
 
         Emprego emprego = empregoRepository.findById(empregoId)
-            .orElseThrow(() -> new HttpStatusException(HttpStatus.NOT_FOUND, "Emprego não encontrado."));
+            .orElseThrow(() -> new ResourceNotFoundException("Emprego", empregoId.toString()));
 
         if (request.getEmpresaNome() != null) emprego.getEmpresa().setNome(request.getEmpresaNome());
         if (request.getCnpj() != null) emprego.getEmpresa().setCnpj(request.getCnpj());
@@ -86,7 +86,7 @@ public class ClientService {
     public ClientResponse findById(UUID id) {
         return clientRepository.findById(id)
             .map(clientMapper::toResponse)
-            .orElseThrow(() -> new HttpStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado."));
+            .orElseThrow(() -> new ResourceNotFoundException("Cliente", id.toString()));
     }
 
     @Executable
@@ -97,7 +97,7 @@ public class ClientService {
     @Executable
     public void delete(UUID id) {
         clientRepository.findById(id)
-            .orElseThrow(() -> new HttpStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado."));
+            .orElseThrow(() -> new ResourceNotFoundException("Cliente", id.toString()));
 
         clientRepository.deleteById(id);
     }
