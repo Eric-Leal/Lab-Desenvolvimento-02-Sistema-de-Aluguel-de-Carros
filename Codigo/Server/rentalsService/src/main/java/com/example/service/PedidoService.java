@@ -9,12 +9,12 @@ import com.example.dto.pedido.PedidoResponse;
 import com.example.dto.pedido.UpdatePedidoRequest;
 import com.example.enums.StatusGeral;
 import com.example.enums.StatusLocador;
+import com.example.exception.InvalidStatusTransitionException;
+import com.example.exception.PedidoNotFoundException;
 import com.example.mapper.PedidoMapper;
 import com.example.model.Pedido;
 import com.example.repository.PedidoRepository;
 import io.micronaut.context.annotation.Executable;
-import io.micronaut.http.HttpStatus;
-import io.micronaut.http.exceptions.HttpStatusException;
 import jakarta.inject.Singleton;
 import lombok.AllArgsConstructor;
 
@@ -50,14 +50,14 @@ public class PedidoService {
     public PedidoResponse findById(UUID id) {
         return pedidoRepository.findById(id)
             .map(pedidoMapper::toResponse)
-            .orElseThrow(() -> new HttpStatusException(HttpStatus.NOT_FOUND, "Pedido " + id + " não encontrado."));
+            .orElseThrow(() -> new PedidoNotFoundException(id));
     }
 
     @Executable
     public PedidoResponse update(UUID id, UpdatePedidoRequest request) {
         Pedido pedido = getPedidoOrThrow(id);
         if (!StatusGeral.RASCUNHO.name().equals(pedido.getStatusGeral())) {
-            throw new HttpStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Pedido só pode ser editado quando em RASCUNHO.");
+            throw new InvalidStatusTransitionException("Pedido só pode ser editado quando em RASCUNHO.");
         }
         pedidoMapper.updateEntity(request, pedido);
         return pedidoMapper.toResponse(pedidoRepository.update(pedido));
@@ -67,7 +67,7 @@ public class PedidoService {
     public PedidoResponse submeter(UUID id, String authorization) {
         Pedido pedido = getPedidoOrThrow(id);
         if (!StatusGeral.RASCUNHO.name().equals(pedido.getStatusGeral())) {
-            throw new HttpStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Pedido só pode ser submetido quando em RASCUNHO.");
+            throw new InvalidStatusTransitionException("Pedido só pode ser submetido quando em RASCUNHO.");
         }
 
         // Verificar se requer financiamento comparando rendimento do cliente com valor total
@@ -90,7 +90,7 @@ public class PedidoService {
     public PedidoResponse cancelar(UUID id) {
         Pedido pedido = getPedidoOrThrow(id);
         if (StatusGeral.CONTRATO_FECHADO.name().equals(pedido.getStatusGeral())) {
-            throw new HttpStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Pedido com contrato fechado não pode ser cancelado.");
+            throw new InvalidStatusTransitionException("Pedido com contrato fechado não pode ser cancelado.");
         }
         pedido.setStatusGeral(StatusGeral.CANCELADO.name());
         return pedidoMapper.toResponse(pedidoRepository.update(pedido));
@@ -124,7 +124,7 @@ public class PedidoService {
     public PedidoResponse aprovar(UUID id) {
         Pedido pedido = getPedidoOrThrow(id);
         if (!StatusGeral.SUBMETIDO.name().equals(pedido.getStatusGeral())) {
-            throw new HttpStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Pedido só pode ser aprovado quando SUBMETIDO.");
+            throw new InvalidStatusTransitionException("Pedido só pode ser aprovado quando SUBMETIDO.");
         }
         pedido.setStatusLocador(StatusLocador.APROVADO.name());
         if (Boolean.TRUE.equals(pedido.getRequerFinanciamento())) {
@@ -139,7 +139,7 @@ public class PedidoService {
     public PedidoResponse reprovar(UUID id) {
         Pedido pedido = getPedidoOrThrow(id);
         if (!StatusGeral.SUBMETIDO.name().equals(pedido.getStatusGeral())) {
-            throw new HttpStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Pedido só pode ser reprovado quando SUBMETIDO.");
+            throw new InvalidStatusTransitionException("Pedido só pode ser reprovado quando SUBMETIDO.");
         }
         pedido.setStatusLocador(StatusLocador.REPROVADO.name());
         return pedidoMapper.toResponse(pedidoRepository.update(pedido));
@@ -158,7 +158,7 @@ public class PedidoService {
     public PedidoResponse aprovarFinanciamento(UUID id, UUID bancoId) {
         Pedido pedido = getPedidoOrThrow(id);
         if (!StatusGeral.EM_ANALISE_BANCO.name().equals(pedido.getStatusGeral())) {
-            throw new HttpStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Pedido não está em análise bancária.");
+            throw new InvalidStatusTransitionException("Pedido não está em análise bancária.");
         }
         pedido.setBancoId(bancoId);
         pedido.setStatusGeral(StatusGeral.CONTRATO_FECHADO.name());
@@ -169,7 +169,7 @@ public class PedidoService {
     public PedidoResponse reprovarFinanciamento(UUID id, UUID bancoId) {
         Pedido pedido = getPedidoOrThrow(id);
         if (!StatusGeral.EM_ANALISE_BANCO.name().equals(pedido.getStatusGeral())) {
-            throw new HttpStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Pedido não está em análise bancária.");
+            throw new InvalidStatusTransitionException("Pedido não está em análise bancária.");
         }
         pedido.setBancoId(bancoId);
         pedido.setStatusGeral(StatusGeral.REPROVADO_BANCO.name());
@@ -180,7 +180,7 @@ public class PedidoService {
 
     private Pedido getPedidoOrThrow(UUID id) {
         return pedidoRepository.findById(id)
-            .orElseThrow(() -> new HttpStatusException(HttpStatus.NOT_FOUND, "Pedido " + id + " não encontrado."));
+            .orElseThrow(() -> new PedidoNotFoundException(id));
     }
 
     private List<Long> getMatriculasDoLocador(UUID locadorId) {
