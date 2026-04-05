@@ -1,0 +1,8 @@
+target/
+.idea/
+*.iml
+.DS_Store
+
+# Local secrets specific to this service
+.env
+.env.local
