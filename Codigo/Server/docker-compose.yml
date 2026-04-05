@@ -19,20 +19,40 @@ services:
       postgres:
         condition: service_healthy
 
-  microsservico-b:
+  vehiclesService:
     image: eclipse-temurin:21-jdk-jammy
     ports:
       - "8081:8081"
     restart: unless-stopped
     volumes:
-      - ./microsservico-b/target:/app:ro
+      - ./vehiclesService/target:/app:ro
     env_file:
-      - ./microsservico-b/.env
+      - ./vehiclesService/.env
     environment:
       - JAVA_OPTS=-Xmx512m
       - JAVA_TOOL_OPTIONS=-Djava.net.preferIPv4Stack=true
       - MICRONAUT_SERVER_PORT=8081
-    command: ["java", "-jar", "/app/microsservico-b-0.1.jar"]
+    command: ["java", "-jar", "/app/vehiclesService-0.1.jar"]
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  rentalsService:
+    image: eclipse-temurin:21-jdk-jammy
+    ports:
+      - "8082:8082"
+    restart: unless-stopped
+    volumes:
+      - ./rentalsService/target:/app:ro
+    env_file:
+      - ./rentalsService/.env
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - JAVA_TOOL_OPTIONS=-Djava.net.preferIPv4Stack=true
+      - MICRONAUT_SERVER_PORT=8082
+    command: ["java", "-jar", "/app/rentalsService-0.1.jar"]
     networks:
       - app-network
     depends_on:
@@ -50,13 +70,15 @@ services:
       - JAVA_OPTS=-Xmx512m
       - MICRONAUT_SERVER_PORT=8000
       - PROXY_TARGETS_USERSSERVICE=http://usersService:8080
-      - PROXY_TARGETS_MICROSSERVICOB=http://microsservico-b:8081
+      - PROXY_TARGETS_VEHICLESSERVICE=http://vehiclesService:8081
+      - PROXY_TARGETS_RENTALSSERVICE=http://rentalsService:8082
     command: ["java", "-jar", "/app/gateway-0.1.jar"]
     networks:
       - app-network
     depends_on:
       - usersService
-      - microsservico-b
+      - vehiclesService
+      - rentalsService
 
   postgres:
     image: postgres:15

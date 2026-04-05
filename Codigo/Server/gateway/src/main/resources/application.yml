@@ -7,10 +7,9 @@ micronaut:
       enabled: true
       configurations:
         default:
-          allowed-origins:
-            - "http://localhost:3000"
-            - "http://127.0.0.1:3000"
-            - "http://[::1]:3000"
+          allowed-origins-regex:
+            - "^http://(localhost|127\\.0\\.0\\.1)(:\\d+)?$"
+            - "^http://\\[::1\\](:\\d+)?$"
           allowed-methods:
             - "GET"
             - "POST"
@@ -30,4 +29,5 @@ micronaut:
 proxy:
   targets:
     usersservice: "http://usersService:8080"
-    microsservicob: "http://microsservico-b:8081"
+    vehiclesservice: "http://vehiclesService:8081"
+    rentalsservice: "http://rentalsService:8082"

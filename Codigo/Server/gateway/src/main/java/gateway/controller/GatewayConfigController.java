@@ -9,16 +9,20 @@ import java.util.Map;
 public class GatewayConfigController {
 
     @Value("${proxy.targets.usersservice}")
-    private String targetA;
+    private String targetUsers;
 
-    @Value("${proxy.targets.microsservicob}")
-    private String targetB;
+    @Value("${proxy.targets.vehiclesservice}")
+    private String targetVehicles;
+
+    @Value("${proxy.targets.rentalsservice}")
+    private String targetRentals;
 
     @Get("/config")
     public Map<String, String> getConfig() {
         return Map.of(
-            "targetA", targetA,
-            "targetB", targetB
+            "targetUsers", targetUsers,
+            "targetVehicles", targetVehicles,
+            "targetRentals", targetRentals
         );
     }
 }
