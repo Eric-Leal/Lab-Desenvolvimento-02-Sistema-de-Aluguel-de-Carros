@@ -41,7 +41,7 @@ public class UsersServiceController {
     }
 
     @Options("{path:.*}")
-    public Publisher<MutableHttpResponse<?>> proxyOptions(@Nullable String path) {
-        return proxyFacade.respondOptionsPreflight();
+    public Publisher<MutableHttpResponse<?>> proxyOptions(HttpRequest<?> request, @Nullable String path) {
+        return proxyFacade.respondOptionsPreflight(request);
     }
 }

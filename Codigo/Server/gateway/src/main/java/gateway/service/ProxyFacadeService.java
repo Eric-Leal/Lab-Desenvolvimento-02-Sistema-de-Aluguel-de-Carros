@@ -14,13 +14,17 @@ import reactor.core.publisher.Mono;
 public class ProxyFacadeService {
 
     /**
-     * Aplica os cabeçalhos de CORS manualmente na resposta.
+     * Aplica os cabeçalhos de CORS na resposta, ecoando a origem do request.
      */
-    public MutableHttpResponse<?> applyCorsHeaders(MutableHttpResponse<?> res) {
-        res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+    public MutableHttpResponse<?> applyCorsHeaders(MutableHttpResponse<?> res, String origin) {
+        String allowedOrigin = (origin != null && !origin.isBlank()) ? origin : "*";
+        res.header("Access-Control-Allow-Origin", allowedOrigin);
         res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD");
         res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, X-Requested-With");
-        res.header("Access-Control-Allow-Credentials", "true");
+        if (!"*".equals(allowedOrigin)) {
+            res.header("Access-Control-Allow-Credentials", "true");
+        }
+        res.header("Vary", "Origin");
         return res;
     }
 
@@ -38,16 +42,19 @@ public class ProxyFacadeService {
         final String finalPathToUse = tempPath;
         System.out.println("[GATEWAY FACADE] Resolving Proxy Request to internal path: " + finalPathToUse);
 
+        String origin = originalRequest.getHeaders().get("Origin");
+
         HttpRequest<?> finalRequest = originalRequest.mutate()
                 .uri(java.net.URI.create(finalPathToUse));
 
-        return Flux.from(targetClient.proxy(finalRequest)).map(this::applyCorsHeaders);
+        return Flux.from(targetClient.proxy(finalRequest)).map(res -> applyCorsHeaders(res, origin));
     }
 
     /**
      * Responde requisições de configuração OPTIONS (Preflight Security Test do Navegador).
      */
-    public Publisher<MutableHttpResponse<?>> respondOptionsPreflight() {
-        return Mono.just(applyCorsHeaders(HttpResponse.ok()));
+    public Publisher<MutableHttpResponse<?>> respondOptionsPreflight(HttpRequest<?> request) {
+        String origin = request.getHeaders().get("Origin");
+        return Mono.just(applyCorsHeaders(HttpResponse.ok(), origin));
     }
 }
