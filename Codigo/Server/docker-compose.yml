@@ -128,7 +128,7 @@ services:
     image: postgres:15
     restart: always
     environment:
-      - POSTGRES_DB=aluguelcarros
+      - POSTGRES_DB=aluguel-carro
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
     volumes:
@@ -138,7 +138,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d aluguelcarros"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d aluguel-carro"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -150,7 +150,7 @@ services:
     ports:
       - "8090:8081"
     environment:
-      - DATABASE_URL=postgres://admin:admin@postgres:5432/aluguelcarros?sslmode=disable
+      - DATABASE_URL=postgres://admin:admin@postgres:5432/aluguel-carro?sslmode=disable
     depends_on:
       - postgres
     networks:

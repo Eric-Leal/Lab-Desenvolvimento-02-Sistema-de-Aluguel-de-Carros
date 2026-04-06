@@ -1,11 +1,12 @@
 package com.example.service;
 
+import com.example.exception.BusinessException;
+import com.example.exception.ResourceNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import com.example.dto.AnalisarContratoRequest;
 import com.example.dto.ContratoResponse;
@@ -13,6 +14,7 @@ import com.example.dto.CriarContratoRequest;
 import com.example.enums.StatusContrato;
 import com.example.model.Contrato;
 import com.example.repository.ContratoRepository;
+import com.example.mapper.ContratoMapper;
 
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
@@ -24,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class ContratoService {
 
     private final ContratoRepository repository;
+    private final ContratoMapper mapper;
     
     @Client("http://reservasService:8084")
     private final HttpClient reservasClient;
@@ -49,28 +52,28 @@ public class ContratoService {
                 .build();
 
         Contrato saved = repository.save(contrato);
-        return toResponse(saved);
+        return mapper.toResponse(saved);
     }
 
     public ContratoResponse submeterParaAnalise(UUID contratoId) {
         Contrato contrato = repository.findById(contratoId)
-                .orElseThrow(() -> new RuntimeException("Contrato não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Contrato", contratoId.toString()));
 
         if (contrato.getStatus() != StatusContrato.RASCUNHO) {
-            throw new RuntimeException("Contrato só pode ser submetido do status RASCUNHO");
+            throw new BusinessException("Contrato só pode ser submetido do status RASCUNHO");
         }
 
         contrato.setStatus(StatusContrato.PENDENTE_ANALISE);
         Contrato updated = repository.update(contrato);
-        return toResponse(updated);
+        return mapper.toResponse(updated);
     }
 
     public ContratoResponse analisarContrato(AnalisarContratoRequest request) {
         Contrato contrato = repository.findById(request.getContratoId())
-                .orElseThrow(() -> new RuntimeException("Contrato não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Contrato", request.getContratoId().toString()));
 
         if (contrato.getStatus() != StatusContrato.PENDENTE_ANALISE) {
-            throw new RuntimeException("Contrato deve estar PENDENTE_ANALISE para ser analisado");
+            throw new BusinessException("Contrato deve estar PENDENTE_ANALISE para ser analisado");
         }
 
         contrato.setScoreFinanceiro(request.getScoreFinanceiro());
@@ -85,7 +88,7 @@ public class ContratoService {
         }
 
         Contrato updated = repository.update(contrato);
-        return toResponse(updated);
+        return mapper.toResponse(updated);
     }
 
     private void tentarBloquearReserva(Contrato contrato) {
@@ -107,86 +110,57 @@ public class ContratoService {
 
     public ContratoResponse assinarContrato(UUID contratoId) {
         Contrato contrato = repository.findById(contratoId)
-                .orElseThrow(() -> new RuntimeException("Contrato não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Contrato", contratoId.toString()));
 
         if (contrato.getStatus() != StatusContrato.APROVADO) {
-            throw new RuntimeException("Apenas contratos APROVADOS podem ser assinados");
+            throw new BusinessException("Apenas contratos APROVADOS podem ser assinados");
         }
 
         contrato.setStatus(StatusContrato.ASSINADO);
         Contrato updated = repository.update(contrato);
-        return toResponse(updated);
+        return mapper.toResponse(updated);
     }
 
     public ContratoResponse ativarContrato(UUID contratoId) {
         Contrato contrato = repository.findById(contratoId)
-                .orElseThrow(() -> new RuntimeException("Contrato não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Contrato", contratoId.toString()));
 
         if (contrato.getStatus() != StatusContrato.ASSINADO) {
-            throw new RuntimeException("Apenas contratos ASSINADOS podem ser ativados");
+            throw new BusinessException("Apenas contratos ASSINADOS podem ser ativados");
         }
 
         if (LocalDate.now().isBefore(contrato.getDataInicio())) {
-            throw new RuntimeException("Contrato não pode ser ativado antes de sua data de início");
+            throw new BusinessException("Contrato não pode ser ativado antes de sua data de início");
         }
 
         contrato.setStatus(StatusContrato.ATIVO);
         Contrato updated = repository.update(contrato);
-        return toResponse(updated);
+        return mapper.toResponse(updated);
     }
 
     public ContratoResponse encerrarContrato(UUID contratoId) {
         Contrato contrato = repository.findById(contratoId)
-                .orElseThrow(() -> new RuntimeException("Contrato não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Contrato", contratoId.toString()));
 
         if (contrato.getStatus() != StatusContrato.ATIVO) {
-            throw new RuntimeException("Apenas contratos ATIVOS podem ser encerrados");
+            throw new BusinessException("Apenas contratos ATIVOS podem ser encerrados");
         }
 
         contrato.setStatus(StatusContrato.ENCERRADO);
         Contrato updated = repository.update(contrato);
-        return toResponse(updated);
+        return mapper.toResponse(updated);
     }
 
     public List<ContratoResponse> listarPendentes() {
-        return repository.queryByStatusOrderByAtualizadoEmAsc(StatusContrato.PENDENTE_ANALISE)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        return mapper.toResponseList(repository.queryByStatusOrderByAtualizadoEmAsc(StatusContrato.PENDENTE_ANALISE));
     }
 
     public List<ContratoResponse> listarPorCliente(Long clienteId) {
-        return repository.findByClienteId(clienteId)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        return mapper.toResponseList(repository.findByClienteId(clienteId));
     }
 
     public List<ContratoResponse> listarTodos() {
-        return repository.findAll().stream().toList()
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        return mapper.toResponseList(repository.findAll().stream().toList());
     }
 
-    private ContratoResponse toResponse(Contrato contrato) {
-        return ContratoResponse.builder()
-                .id(contrato.getId())
-                .clienteId(contrato.getClienteId())
-                .veiculoId(contrato.getVeiculoId())
-                .pedidoId(contrato.getPedidoId())
-                .dataInicio(contrato.getDataInicio())
-                .dataFim(contrato.getDataFim())
-                .valorDiario(contrato.getValorDiario())
-                .valorTotal(contrato.getValorTotal())
-                .valorEntrada(contrato.getValorEntrada())
-                .valorRestante(contrato.getValorRestante())
-                .status(contrato.getStatus())
-                .scoreFinanceiro(contrato.getScoreFinanceiro())
-                .motivo(contrato.getMotivo())
-                .reservaId(contrato.getReservaId())
-                .criadoEm(contrato.getCriadoEm())
-                .atualizadoEm(contrato.getAtualizadoEm())
-                .build();
-    }
 }

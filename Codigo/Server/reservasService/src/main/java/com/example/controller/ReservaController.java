@@ -3,23 +3,23 @@ package com.example.controller;
 import com.example.dto.BloquearReservaRequest;
 import com.example.dto.DisponibilidadeResponse;
 import com.example.dto.ReservaResponse;
-import com.example.dto.VerificacaoDisponibilidadeRequest;
-import com.example.model.Reserva;
 import com.example.service.ReservaService;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.HttpStatus;
 import io.micronaut.http.annotation.*;
-import jakarta.inject.Inject;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
 
 @Controller
 public class ReservaController {
 
-    @Inject
-    private ReservaService service;
+    private final ReservaService service;
+
+    public ReservaController(ReservaService service) {
+        this.service = service;
+    }
 
     // ============ HEALTH CHECK ============
 
@@ -42,23 +42,17 @@ public class ReservaController {
     @Get("/reservas/disponibilidade")
     public HttpResponse<DisponibilidadeResponse> verificarDisponibilidade(
             @QueryValue("veiculo_id") Long veiculoId,
-            @QueryValue("data_inicio") String dataInicioStr,
-            @QueryValue("data_fim") String dataFimStr) {
-        try {
-            java.time.LocalDate dataInicio = java.time.LocalDate.parse(dataInicioStr);
-            java.time.LocalDate dataFim = java.time.LocalDate.parse(dataFimStr);
+            @QueryValue("data_inicio") LocalDate dataInicio,
+            @QueryValue("data_fim") LocalDate dataFim) {
 
-            boolean disponivel = service.verificarDisponibilidade(veiculoId, dataInicio, dataFim);
-            
-            DisponibilidadeResponse response = new DisponibilidadeResponse(
-                    disponivel,
-                    disponivel ? null : "Período ocupado ou em sobreposição"
-            );
-            
-            return HttpResponse.ok(response);
-        } catch (Exception e) {
-            return HttpResponse.badRequest(new DisponibilidadeResponse(false, "Erro ao verificar disponibilidade: " + e.getMessage()));
-        }
+        boolean disponivel = service.verificarDisponibilidade(veiculoId, dataInicio, dataFim);
+        
+        DisponibilidadeResponse response = new DisponibilidadeResponse(
+                disponivel,
+                disponivel ? null : "Período ocupado ou em sobreposição"
+        );
+        
+        return HttpResponse.ok(response);
     }
 
     // ============ BLOQUEIO DE RESERVA (MS-D) ============
@@ -70,23 +64,17 @@ public class ReservaController {
      */
     @Post("/reservas/bloquear")
     public HttpResponse<ReservaResponse> bloquearReserva(@Body BloquearReservaRequest request) {
-        try {
-            UUID pedidoId = UUID.fromString(request.getPedidoId());
-            Reserva reserva = service.bloquearReserva(
-                    request.getVeiculoId(),
-                    pedidoId,
-                    request.getDataInicio(),
-                    request.getDataFim()
-            );
-            
-            return HttpResponse
-                    .created(mapToResponse(reserva))
-                    .header("Location", "/reservas/" + reserva.getId());
-        } catch (IllegalStateException e) {
-            return HttpResponse.badRequest(null);
-        } catch (Exception e) {
-            return HttpResponse.serverError();
-        }
+        UUID pedidoId = UUID.fromString(request.getPedidoId());
+        ReservaResponse reserva = service.bloquearReserva(
+                request.getVeiculoId(),
+                pedidoId,
+                request.getDataInicio(),
+                request.getDataFim()
+        );
+        
+        return HttpResponse
+                .created(reserva)
+                .header("Location", "/reservas/" + reserva.getId());
     }
 
     // ============ MUDANÇA DE STATUS ============
@@ -97,12 +85,8 @@ public class ReservaController {
      */
     @Put("/reservas/{id}/ativar")
     public HttpResponse<ReservaResponse> ativarReserva(@PathVariable UUID id) {
-        try {
-            Reserva reserva = service.ativarReserva(id);
-            return HttpResponse.ok(mapToResponse(reserva));
-        } catch (IllegalStateException | IllegalArgumentException e) {
-            return HttpResponse.badRequest(null);
-        }
+        ReservaResponse reserva = service.ativarReserva(id);
+        return HttpResponse.ok(reserva);
     }
 
     /**
@@ -111,12 +95,8 @@ public class ReservaController {
      */
     @Put("/reservas/{id}/encerrar")
     public HttpResponse<ReservaResponse> encerrarReserva(@PathVariable UUID id) {
-        try {
-            Reserva reserva = service.encerrarReserva(id);
-            return HttpResponse.ok(mapToResponse(reserva));
-        } catch (IllegalStateException | IllegalArgumentException e) {
-            return HttpResponse.badRequest(null);
-        }
+        ReservaResponse reserva = service.encerrarReserva(id);
+        return HttpResponse.ok(reserva);
     }
 
     /**
@@ -125,12 +105,8 @@ public class ReservaController {
      */
     @Delete("/reservas/{id}")
     public HttpResponse<Void> cancelarReserva(@PathVariable UUID id) {
-        try {
-            service.cancelarReserva(id);
-            return HttpResponse.noContent();
-        } catch (IllegalStateException | IllegalArgumentException e) {
-            return HttpResponse.badRequest(null);
-        }
+        service.cancelarReserva(id);
+        return HttpResponse.noContent();
     }
 
     // ============ CONSULTA E LISTAGEM ============
@@ -141,11 +117,8 @@ public class ReservaController {
      */
     @Get("/reservas/agenda/{veiculoId}")
     public HttpResponse<List<ReservaResponse>> obterAgendaVeiculo(@PathVariable Long veiculoId) {
-        List<Reserva> reservas = service.obterAgendaVeiculo(veiculoId);
-        List<ReservaResponse> responses = reservas.stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-        return HttpResponse.ok(responses);
+        List<ReservaResponse> reservas = service.obterAgendaVeiculo(veiculoId);
+        return HttpResponse.ok(reservas);
     }
 
     /**
@@ -155,7 +128,7 @@ public class ReservaController {
     @Get("/reservas/{id}")
     public HttpResponse<ReservaResponse> obterReserva(@PathVariable UUID id) {
         return service.obterReserva(id)
-                .map(reserva -> HttpResponse.ok(mapToResponse(reserva)))
+                .map(reserva -> HttpResponse.ok(reserva))
                 .orElse(HttpResponse.notFound());
     }
 
@@ -165,21 +138,7 @@ public class ReservaController {
      */
     @Get("/reservas")
     public List<ReservaResponse> listarTodas() {
-        return service.listarTodas().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return service.listarTodas();
     }
 
-    // ============ HELPER ============
-
-    private ReservaResponse mapToResponse(Reserva reserva) {
-        return new ReservaResponse(
-                reserva.getId(),
-                reserva.getVeiculoId(),
-                reserva.getPedidoId(),
-                reserva.getDataInicio(),
-                reserva.getDataFim(),
-                reserva.getStatus()
-        );
-    }
 }
