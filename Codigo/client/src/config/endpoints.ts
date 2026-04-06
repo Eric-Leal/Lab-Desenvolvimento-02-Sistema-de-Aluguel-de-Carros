@@ -1,8 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export const API_ENDPOINTS = {
-  serviceA: `${API_URL}/usersService`,
-  serviceB: `${API_URL}/vehiclesService`,
+  usersService: `${API_URL}/usersService`,
   vehiclesService: `${API_URL}/vehiclesService`,
   rentalsService: `${API_URL}/rentalsService`,
   contratoService: `${API_URL}/contratoService`,

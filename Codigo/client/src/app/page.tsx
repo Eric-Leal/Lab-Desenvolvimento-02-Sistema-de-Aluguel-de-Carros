@@ -1,7 +1,7 @@
 "use client";
 
 import { contratoService } from "@/services/contrato.service";
-import { microsservicoService } from "@/services/microsservico.service";
+import { usersService } from "@/services/users.service";
 import { rentalsService } from "@/services/rentals.service";
 import { reservasService } from "@/services/reservas.service";
 import { vehiclesService } from "@/services/vehicles.service";
@@ -9,20 +9,20 @@ import Image from "next/image";
 import { useState } from "react";
 
 export default function Home() {
-  const [statusA, setStatusA] = useState<string | null>(null);
+  const [statusUsers, setStatusUsers] = useState<string | null>(null);
   const [statusVehicles, setStatusVehicles] = useState<string | null>(null);
   const [statusRentals, setStatusRentals] = useState<string | null>(null);
   const [statusContrato, setStatusContrato] = useState<string | null>(null);
   const [statusReservas, setStatusReservas] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const testServiceA = async () => {
+  const testUsersService = async () => {
     setLoading(true);
     try {
-      const res = await microsservicoService.ping();
-      setStatusA(`Sucesso: ${res}`);
+      const res = await usersService.ping();
+      setStatusUsers(`Sucesso: ${res}`);
     } catch (error: any) {
-      setStatusA(`Erro: ${error.message}`);
+      setStatusUsers(`Erro: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -105,15 +105,15 @@ export default function Home() {
             </h2>
             <p className="text-xs text-zinc-400 mb-4">Porta 8080</p>
             <button
-              onClick={testServiceA}
+              onClick={testUsersService}
               disabled={loading}
               className="w-full py-3 px-4 bg-zinc-900 dark:bg-zinc-50 text-white dark:text-black rounded-xl font-medium transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
             >
               Testar Conexão
             </button>
-            {statusA && (
-              <p className={`mt-4 text-xs font-mono break-all p-3 rounded-lg ${statusA.startsWith('Erro') ? 'bg-red-50 text-red-600 dark:bg-red-900/20' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20'}`}>
-                {statusA}
+            {statusUsers && (
+              <p className={`mt-4 text-xs font-mono break-all p-3 rounded-lg ${statusUsers.startsWith('Erro') ? 'bg-red-50 text-red-600 dark:bg-red-900/20' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20'}`}>
+                {statusUsers}
               </p>
             )}
           </div>
