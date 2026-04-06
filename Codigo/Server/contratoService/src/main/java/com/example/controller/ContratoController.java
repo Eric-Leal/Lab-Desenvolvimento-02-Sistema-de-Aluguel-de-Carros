@@ -1,16 +1,21 @@
 package com.example.controller;
 
-import com.example.dto.AnalisarContratoRequest;
-import com.example.dto.CriarContratoRequest;
-import com.example.dto.ContratoResponse;
-import com.example.service.ContratoService;
-import io.micronaut.http.HttpResponse;
-import io.micronaut.http.annotation.*;
-import jakarta.inject.Inject;
-import lombok.RequiredArgsConstructor;
-
 import java.util.List;
 import java.util.UUID;
+
+import com.example.dto.AnalisarContratoRequest;
+import com.example.dto.ContratoResponse;
+import com.example.dto.CriarContratoRequest;
+import com.example.service.ContratoService;
+
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.annotation.Body;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.annotation.Post;
+import io.micronaut.http.annotation.Put;
+import lombok.RequiredArgsConstructor;
 
 @Controller("/contratos")
 @RequiredArgsConstructor

@@ -1,21 +1,23 @@
 package com.example.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import com.example.dto.AnalisarContratoRequest;
-import com.example.dto.CriarContratoRequest;
 import com.example.dto.ContratoResponse;
+import com.example.dto.CriarContratoRequest;
 import com.example.enums.StatusContrato;
 import com.example.model.Contrato;
 import com.example.repository.ContratoRepository;
+
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import jakarta.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Singleton
 @RequiredArgsConstructor
