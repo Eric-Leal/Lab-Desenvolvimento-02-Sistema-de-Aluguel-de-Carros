@@ -3,9 +3,11 @@ package com.example.service;
 import com.example.exception.BusinessException;
 import com.example.exception.ResourceNotFoundException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 import com.example.dto.ReservaResponse;
 import com.example.mapper.ReservaMapper;
@@ -119,6 +121,8 @@ public class ReservaService {
      * Lista todas as reservas.
      */
     public List<ReservaResponse> listarTodas() {
-        return mapper.toResponseList(repository.findAll().stream().toList());
+        List<Reserva> all = new ArrayList<>();
+        repository.findAll().forEach(all::add);
+        return mapper.toResponseList(all);
     }
 }
