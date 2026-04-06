@@ -59,6 +59,46 @@ services:
       postgres:
         condition: service_healthy
 
+  contratoService:
+    image: eclipse-temurin:21-jdk-jammy
+    ports:
+      - "8083:8083"
+    restart: unless-stopped
+    volumes:
+      - ./contratoService/target:/app:ro
+    env_file:
+      - ./contratoService/.env
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - JAVA_TOOL_OPTIONS=-Djava.net.preferIPv4Stack=true
+      - MICRONAUT_SERVER_PORT=8083
+    command: ["java", "-jar", "/app/contratoService-0.1.jar"]
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  reservasService:
+    image: eclipse-temurin:21-jdk-jammy
+    ports:
+      - "8084:8084"
+    restart: unless-stopped
+    volumes:
+      - ./reservasService/target:/app:ro
+    env_file:
+      - ./reservasService/.env
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - JAVA_TOOL_OPTIONS=-Djava.net.preferIPv4Stack=true
+      - MICRONAUT_SERVER_PORT=8084
+    command: ["java", "-jar", "/app/reservasService-0.1.jar"]
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   gateway:
     image: eclipse-temurin:21-jdk-jammy
     ports:
@@ -72,6 +112,8 @@ services:
       - PROXY_TARGETS_USERSSERVICE=http://usersService:8080
       - PROXY_TARGETS_VEHICLESSERVICE=http://vehiclesService:8081
       - PROXY_TARGETS_RENTALSSERVICE=http://rentalsService:8082
+      - PROXY_TARGETS_CONTRATOSERVICE=http://contratoService:8083
+      - PROXY_TARGETS_RESERVASSERVICE=http://reservasService:8084
     command: ["java", "-jar", "/app/gateway-0.1.jar"]
     networks:
       - app-network
@@ -79,6 +121,8 @@ services:
       - usersService
       - vehiclesService
       - rentalsService
+      - contratoService
+      - reservasService
 
   postgres:
     image: postgres:15
