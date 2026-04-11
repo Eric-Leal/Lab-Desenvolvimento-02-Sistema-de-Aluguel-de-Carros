@@ -43,9 +43,10 @@ Abaixo estão os artefatos de engenharia de software utilizados no desenho da ap
 - 📖 [PDF - Histórias de Usuário](docs/historias-de-usuarios/Historias%20de%20Usuario%20-%20Sistema%20de%20aluguel%20de%20carros%20-%20LAB2.pdf)
 
 ### Projetos Arquiteturais
-- 📍 [Diagrama de Caso de Uso (PNG)](docs/diagramas/Diagrama%20de%20Caso%20de%20Uso.png)
-- 🧩 [Diagrama de Classe (PNG)](docs/diagramas/Diagrama%20de%20classe.png)
-- 📦 [Diagrama de Pacotes (PNG)](docs/diagramas/Diagrama%20de%20Pacotes.png)
+- 📍 [Diagrama de Caso de Uso (PNG)](docs/diagramas/Diagrama-caso-uso-lab2.png)
+- 🧩 [Diagrama de Classe (PNG)](docs/diagramas/diagrama-de-classe.png)
+- 📦 [Diagrama de Pacotes (PNG)](docs/diagramas/diagrama-de-pacotes.png)
+- 🔌 [Diagrama de Componentes (PNG)](docs/diagramas/diagrama-de-componentes.png)
 
 ---
 
@@ -55,7 +56,7 @@ O sistema foge do padrão monolítico tradicional e adota um padrão de mercado:
 
 1. **Front-end (Next.js)**: Uma SPA isolada que não conhece as portas do servidor, comunicando-se unicamente com a porta 8000.
 2. **API Gateway (Porta 8000)**: Construído em Micronaut. Sua função é receber todo o tráfego do React, tratar as políticas do navegador (CORS), remover prefixos (Strip Prefix) e fazer o balanceamento inteligente enviando a requisição para o microserviço correspondente.
-3. **Microserviços (Netty)**: Diversos módulos back-end construídos em Java rodando em portas seladas através do Docker (ex: Serviço A, Serviço B).  
+3. **Microserviços (Netty)**: Cinco módulos back-end construídos em Java, cada um com domínio isolado, rodando em portas seladas através do Docker: `usersService`, `vehiclesService`, `rentalsService`, `reservasService` e `contratoService`.
 4. **PostgreSQL**: Banco de dados relacional isolado também containerizado.
 
 ---
@@ -68,10 +69,15 @@ O repositório está organizado de forma totalmente modular (Monorepo). Abaixo e
 Central de artefatos de engenharia de software e modelos:
 ```text
 docs/
-├── diagramas/               # 📍 Protótipos Astor (.asta), exportações PNG e diagramas de classe/pacotes
-├── historias-de-usuarios/   # 📖 PDF detalhado das Histórias de Usuário (Requisitos)
-└── READMEexemplo.md         # 📘 Modelo de referência para a formatação do portfólio
+├── diagramas/               # 📍 Protótipos Astah (.asta), exportações PNG e diagramas
+│   ├── Diagrama-caso-uso-lab2.png       # Diagrama de Caso de Uso
+│   ├── diagrama-de-classe.png           # Diagrama de Classe
+│   ├── diagrama-de-pacotes.png          # Diagrama de Pacotes
+│   └── diagrama-de-componentes.png      # Diagrama de Componentes
+└── historias-de-usuarios/   # 📖 PDF detalhado das Histórias de Usuário (Requisitos)
 ```
+
+---
 
 ### 2. 🎨 Client - Front-end (`/Codigo/client`)
 Aplicação reativa Next.js responsável pela interface do usuário:
@@ -93,56 +99,300 @@ Codigo/client/
 └── tsconfig.json           # 🔷 Configuração estrita do compilador TypeScript
 ```
 
-### 3. ⚙️ Infraestrutura Back-end (`/Codigo/server`)
+---
+
+### 3. ⚙️ Infraestrutura (`/Codigo/server`)
 O núcleo que rege a orquestração de containers e ferramentas de auxílio ao Dev:
 ```text
 Codigo/server/
 ├── scripts/                # 📜 Scripts de automação (dev.cmd, dev.ps1, run-local.ps1)
 ├── env-pattern/            # 📝 Catálogo de modelos .ENV para clonagem inicial
 ├── docker-compose.yml      # 🐳 O maestro que sobe os JARs, o Postgres e a rede interna
-├── README.md               # 📘 Guia rápido operacional do servidor
 ├── AI_CONTEXT.md           # 🧠 Contexto de arquitetura para assistentes generativos (IA)
-└── MICROSERVICE_TEMPLATE.md# 📘 Checklist de criação para novos serviços Netty
+├── MICROSERVICE_TEMPLATE.md# 📘 Checklist de criação para novos serviços Netty
+├── README.md               # 📘 Guia rápido operacional do servidor
+├── gateway/                # 🚪 API Gateway (Porta 8000)
+├── usersService/           # 👤 Serviço de Usuários, Agentes e Autenticação
+├── vehiclesService/        # 🚗 Serviço de Gestão de Automóveis
+├── rentalsService/         # 📋 Serviço de Pedidos de Aluguel
+├── reservasService/        # 📅 Serviço de Reservas e Disponibilidade
+└── contratoService/        # 📝 Serviço de Contratos
 ```
+
+---
 
 ### 4. 🚪 API Gateway (`/Codigo/server/gateway`)
 Ponto de entrada único via porta 8000, responsável pelo roteamento reativo e CORS:
 ```text
 Codigo/server/gateway/
-├── .mvn/                   # 📦 Wrapper do Maven para consistência de versão
-├── pom.xml                 # 📄 Configurações do projeto e dependências do Micronaut HTTP Client
-├── mvnw / mvnw.bat         # 🚀 Executáveis do Maven Local
-├── README.md               # 📖 Documentação técnica interna do roteamento do gateway
+├── .mvn/                       # 📦 Wrapper do Maven para consistência de versão
+├── Dockerfile                  # 🐳 Imagem Docker do Gateway
+├── pom.xml                     # 📄 Dependências do Micronaut HTTP Client
+├── mvnw / mvnw.bat             # 🚀 Executáveis do Maven Local
+├── README.md                   # 📖 Documentação técnica interna do roteamento
 └── src/
-    ├── main/resources/     # ⚙️ application.yml (Mapeamento de portas e targets Docker)
+    ├── main/resources/
+    │   └── application.yml     # ⚙️ Mapeamento de rotas e targets Docker de cada serviço
     └── main/java/gateway/
-        ├── controller/     # 🎛️ Roteadores modulares (AController, BController, etc.)
-        ├── service/        # 🛠️ ProxyFacadeService (Manipulador de CORS e URI)
-        └── Application.java# 🚀 Classe Main (Bootstrapping da porta 8000)
+        ├── controller/
+        │   ├── UsersServiceController.java    # 🎛️ Proxy para /users/** → usersService
+        │   ├── VehiclesServiceController.java # 🎛️ Proxy para /vehicles/** → vehiclesService
+        │   ├── RentalsServiceController.java  # 🎛️ Proxy para /rentals/** → rentalsService
+        │   ├── ReservasServiceController.java # 🎛️ Proxy para /reservas/** → reservasService
+        │   ├── ContratoServiceController.java # 🎛️ Proxy para /contratos/** → contratoService
+        │   └── GatewayConfigController.java   # 🎛️ Endpoint de config/health do gateway
+        ├── service/
+        │   └── ProxyFacadeService.java        # 🛠️ Manipulador central de CORS e URI
+        └── Application.java                   # 🚀 Bootstrapping da porta 8000
 ```
 
-### 5. 📦 Padrão Microsserviço (`/Codigo/server/[nome-do-serviço]`)
-Arquitetura robusta de camadas que todos os domínios (A, B, C...) executam:
+---
+
+### 5. 👤 Users Service (`/Codigo/server/usersService`)
+Domínio de usuários, agentes e autenticação JWT. Opera na **porta 8081**.
 ```text
-Codigo/server/[serviço]/
-├── .mvn/                   # 📦 Maven Wrapper local do serviço
-├── pom.xml                 # 📄 Gestão de dependências (Flyway, JPA, Postgres Driver)
-├── mvnw / mvnw.bat         # 🚀 Executáveis Maven específicos do domínio
-├── README.md               # 📖 Regras de negócio internas documentadas
-├── .env / .env.local       # 🔐 Injeção de senhas, usuário DB e porta secreta
+Codigo/server/usersService/
+├── .mvn/                       # 📦 Maven Wrapper
+├── Dockerfile                  # 🐳 Imagem Docker do serviço
+├── pom.xml                     # 📄 Dependências (JPA, Flyway, JWT, MapStruct)
+├── mvnw / mvnw.bat             # 🚀 Executáveis Maven
+├── .env / .env.example         # 🔐 Variáveis de ambiente do banco e JWT
 └── src/main/
-    ├── resources/          # ⚙️ application.properties (Configuração Hikari e Flyway)
+    ├── resources/
+    │   ├── application.properties  # ⚙️ Config Hikari, Flyway e porta
+    │   └── db/migration/           # 🗄️ Scripts SQL do Flyway (V1__, V2__...)
     └── java/com/example/
-        ├── config/         # ⚙️ Beans de configuração e segurança
-        ├── controller/     # 🎯 Endpoints HTTP (Trabalham a partir da raíz /)
-        ├── service/        # 🧠 Lógica rica e processamento de regras
-        ├── repository/     # 🗄️ Camada de persistência JDBC/JPA
-        ├── model/          # 💾 Entidades que mapeiam as tabelas SQL
-        ├── dto/            # 📦 Requests e Responses (Isolamento de dados)
-        ├── enums/          # 📋 Enumeradores globais do domínio
-        ├── exception/      # ⚠️ Exception Handlers e retornos de erro
-        ├── facade/         # 🎭 Orquestrador de processos entre serviços
-        └── Application.java# 🚀 Ponto de ignição do Microserviço
+        ├── controller/
+        │   ├── agent/
+        │   │   └── AgentController.java          # 🎯 CRUD de Agentes (/agents/**)
+        │   ├── auth/
+        │   │   └── AuthController.java           # 🎯 Login e autenticação (/auth/**)
+        │   ├── client/
+        │   │   └── ClientController.java         # 🎯 CRUD de Clientes (/clients/**)
+        │   └── HealthController.java             # 🎯 Health check (/health)
+        ├── service/
+        │   ├── agent/
+        │   │   └── AgentService.java             # 🧠 Lógica de negócio dos Agentes
+        │   ├── auth/
+        │   │   └── AuthService.java              # 🧠 Geração e validação de JWT
+        │   └── client/
+        │       └── ClientService.java            # 🧠 Lógica de negócio dos Clientes
+        ├── repository/
+        │   ├── agent/
+        │   │   └── AgentRepository.java          # 🗄️ Persistência de Agente (JPA)
+        │   └── client/
+        │       ├── ClientRepository.java         # 🗄️ Persistência de Cliente (JPA)
+        │       └── EmpregoRepository.java        # 🗄️ Persistência de Emprego (JPA)
+        ├── model/
+        │   ├── User.java                         # 💾 Entidade base de usuário
+        │   ├── Address.java                      # 💾 Entidade de endereço
+        │   ├── agent/
+        │   │   └── Agent.java                    # 💾 Entidade Agente
+        │   └── client/
+        │       ├── Client.java                   # 💾 Entidade Cliente
+        │       ├── Emprego.java                  # 💾 Entidade Emprego
+        │       └── EntidadeEmpregadora.java      # 💾 Entidade Empregadora (embutida)
+        ├── dto/
+        │   ├── agent/
+        │   │   ├── AgentResponse.java            # 📦 Response DTO do Agente
+        │   │   ├── CreateAgentRequest.java       # 📦 Request DTO de criação
+        │   │   └── UpdateAgentRequest.java       # 📦 Request DTO de atualização
+        │   ├── auth/
+        │   │   ├── LoginRequest.java             # 📦 Credenciais de login
+        │   │   └── LoginResponse.java            # 📦 Token JWT de resposta
+        │   ├── client/
+        │   │   ├── ClientResponse.java           # 📦 Response DTO do Cliente
+        │   │   ├── CreateClientRequest.java      # 📦 Request DTO de criação
+        │   │   └── UpdateClientRequest.java      # 📦 Request DTO de atualização
+        │   └── common/
+        │       ├── AddressDTO.java               # 📦 DTO de endereço (leitura)
+        │       ├── CreateAddressDTO.java         # 📦 DTO de endereço (criação)
+        │       ├── UpdateAddressDTO.java         # 📦 DTO de endereço (atualização)
+        │       └── EmpregoDTO.java               # 📦 DTO de vínculo empregatício
+        ├── mapper/
+        │   ├── agent/
+        │   │   └── AgentMapper.java              # 🔄 MapStruct: Agent ↔ DTO
+        │   └── client/
+        │       └── ClientMapper.java             # 🔄 MapStruct: Client ↔ DTO
+        ├── enums/
+        │   ├── TipoAgente.java                   # 📋 Enum de tipo de agente
+        │   └── PlaceholderEnum.java              # 📋 Enum de placeholder genérico
+        ├── exception/
+        │   ├── BusinessException.java            # ⚠️ Exceção de regra de negócio
+        │   ├── DocumentAlreadyInUseException.java# ⚠️ CPF/documento duplicado
+        │   ├── EmailAlreadyInUseException.java   # ⚠️ E-mail duplicado
+        │   ├── InvalidCredentialsException.java  # ⚠️ Credenciais inválidas
+        │   ├── ResourceNotFoundException.java    # ⚠️ Recurso não encontrado
+        │   ├── WeakPasswordException.java        # ⚠️ Senha fraca
+        │   └── ValidationExceptionHandler.java   # ⚠️ Handler global de erros
+        ├── util/
+        │   └── PasswordValidator.java            # 🛠️ Validação de força de senha
+        └── Application.java                      # 🚀 Ponto de ignição do serviço
+```
+
+---
+
+### 6. 🚗 Vehicles Service (`/Codigo/server/vehiclesService`)
+Domínio de automóveis disponíveis para aluguel. Opera na **porta 8082**.
+```text
+Codigo/server/vehiclesService/
+├── .mvn/                       # 📦 Maven Wrapper
+├── Dockerfile                  # 🐳 Imagem Docker do serviço
+├── pom.xml                     # 📄 Dependências (JPA, Flyway, MapStruct)
+├── mvnw / mvnw.bat             # 🚀 Executáveis Maven
+├── .env / .env.example         # 🔐 Variáveis de ambiente do banco e porta
+└── src/main/
+    ├── resources/
+    │   ├── application.properties  # ⚙️ Config Hikari, Flyway e porta
+    │   └── db/migration/           # 🗄️ Scripts SQL do Flyway (V1__, V2__...)
+    └── java/com/example/
+        ├── controller/
+        │   ├── AutomovelController.java      # 🎯 CRUD de automóveis (/automoveis/**)
+        │   └── HealthController.java         # 🎯 Health check (/health)
+        ├── service/
+        │   └── AutomovelService.java         # 🧠 Lógica de negócio dos automóveis
+        ├── repository/
+        │   └── AutomovelRepository.java      # 🗄️ Persistência de Automovel (JPA)
+        ├── model/
+        │   └── Automovel.java                # 💾 Entidade Automovel (placa, modelo, ano...)
+        ├── dto/
+        │   └── automovel/
+        │       ├── AutomovelResponse.java        # 📦 Response DTO do Automóvel
+        │       ├── CreateAutomovelRequest.java   # 📦 Request DTO de criação
+        │       ├── UpdateAutomovelRequest.java   # 📦 Request DTO de atualização
+        │       └── UpdateProprietarioRequest.java# 📦 Request DTO de mudança de proprietário
+        ├── mapper/
+        │   └── AutomovelMapper.java          # 🔄 MapStruct: Automovel ↔ DTO
+        ├── exception/
+        │   ├── AutomovelNotFoundException.java   # ⚠️ Automóvel não encontrado
+        │   ├── PlacaAlreadyInUseException.java   # ⚠️ Placa duplicada
+        │   └── ValidationExceptionHandler.java  # ⚠️ Handler global de erros
+        └── Application.java                  # 🚀 Ponto de ignição do serviço
+```
+
+---
+
+### 7. 📋 Rentals Service (`/Codigo/server/rentalsService`)
+Domínio de pedidos de aluguel, integrando dados de usuários e veículos. Opera na **porta 8083**.
+```text
+Codigo/server/rentalsService/
+├── .mvn/                       # 📦 Maven Wrapper
+├── Dockerfile                  # 🐳 Imagem Docker do serviço
+├── pom.xml                     # 📄 Dependências (JPA, Flyway, Micronaut HTTP Client)
+├── mvnw / mvnw.bat             # 🚀 Executáveis Maven
+├── .env / .env.example         # 🔐 Variáveis de ambiente do banco e porta
+└── src/main/
+    ├── resources/
+    │   ├── application.properties  # ⚙️ Config Hikari, Flyway e porta
+    │   └── db/migration/           # 🗄️ Scripts SQL do Flyway (V1__, V2__...)
+    └── java/com/example/
+        ├── controller/
+        │   ├── PedidoController.java         # 🎯 CRUD de pedidos de aluguel (/pedidos/**)
+        │   └── HealthController.java         # 🎯 Health check (/health)
+        ├── service/
+        │   └── PedidoService.java            # 🧠 Lógica de pedido (validação, status)
+        ├── repository/
+        │   └── PedidoRepository.java         # 🗄️ Persistência de Pedido (JPA)
+        ├── model/
+        │   └── Pedido.java                   # 💾 Entidade Pedido (FK cliente, FK veículo)
+        ├── dto/
+        │   ├── pedido/
+        │   │   ├── PedidoResponse.java           # 📦 Response DTO do Pedido
+        │   │   ├── CreatePedidoRequest.java      # 📦 Request DTO de criação
+        │   │   └── UpdatePedidoRequest.java      # 📦 Request DTO de atualização
+        │   ├── client/
+        │   │   └── ClientInfo.java               # 📦 DTO de dados do cliente (consumido)
+        │   └── automovel/
+        │       └── AutomovelInfo.java            # 📦 DTO de dados do automóvel (consumido)
+        ├── mapper/
+        │   └── PedidoMapper.java             # 🔄 MapStruct: Pedido ↔ DTO
+        ├── client/
+        │   ├── UsersServiceClient.java       # 📡 HTTP Client → usersService (validar cliente)
+        │   └── VehiclesServiceClient.java    # 📡 HTTP Client → vehiclesService (validar veículo)
+        ├── enums/
+        │   ├── StatusGeral.java              # 📋 Enum de status geral do pedido
+        │   └── StatusLocador.java            # 📋 Enum de status pelo lado do locador
+        ├── exception/
+        │   ├── PedidoNotFoundException.java          # ⚠️ Pedido não encontrado
+        │   ├── InvalidStatusTransitionException.java # ⚠️ Transição de status inválida
+        │   └── ValidationExceptionHandler.java      # ⚠️ Handler global de erros
+        └── Application.java                  # 🚀 Ponto de ignição do serviço
+```
+
+---
+
+### 8. 📅 Reservas Service (`/Codigo/server/reservasService`)
+Domínio de reservas e verificação de disponibilidade de veículos. Opera na **porta 8084**.
+```text
+Codigo/server/reservasService/
+├── .mvn/                       # 📦 Maven Wrapper
+├── Dockerfile                  # 🐳 Imagem Docker do serviço
+├── pom.xml                     # 📄 Dependências (JPA, Flyway, MapStruct)
+├── mvnw / mvnw.bat             # 🚀 Executáveis Maven
+├── .env / .env.example         # 🔐 Variáveis de ambiente do banco e porta
+└── src/main/
+    ├── resources/
+    │   ├── application.properties  # ⚙️ Config Hikari, Flyway e porta
+    │   └── db/migration/           # 🗄️ Scripts SQL do Flyway (V1__, V2__...)
+    └── java/com/example/
+        ├── controller/
+        │   └── ReservaController.java        # 🎯 Endpoints de reserva e disponibilidade (/reservas/**)
+        ├── service/
+        │   └── ReservaService.java           # 🧠 Lógica de bloqueio e verificação de período
+        ├── repository/
+        │   └── ReservaRepository.java        # 🗄️ Persistência de Reserva (JPA)
+        ├── model/
+        │   └── Reserva.java                  # 💾 Entidade Reserva (FK veículo, período)
+        ├── dto/
+        │   ├── ReservaResponse.java              # 📦 Response DTO da Reserva
+        │   ├── BloquearReservaRequest.java       # 📦 Request DTO para bloquear período
+        │   ├── VerificacaoDisponibilidadeRequest.java # 📦 Request DTO para checar disponibilidade
+        │   └── DisponibilidadeResponse.java      # 📦 Response DTO de disponibilidade
+        ├── mapper/
+        │   └── ReservaMapper.java            # 🔄 MapStruct: Reserva ↔ DTO
+        ├── enums/
+        │   └── StatusReserva.java            # 📋 Enum de status da reserva
+        ├── exception/
+        │   ├── BusinessException.java        # ⚠️ Exceção de regra de negócio
+        │   └── ResourceNotFoundException.java# ⚠️ Recurso não encontrado
+        └── Application.java                  # 🚀 Ponto de ignição do serviço
+```
+
+---
+
+### 9. 📝 Contrato Service (`/Codigo/server/contratoService`)
+Domínio de contratos gerados ao confirmar um aluguel. Opera na **porta 8085**.
+```text
+Codigo/server/contratoService/
+├── .mvn/                       # 📦 Maven Wrapper
+├── Dockerfile                  # 🐳 Imagem Docker do serviço
+├── pom.xml                     # 📄 Dependências (JPA, Flyway, MapStruct)
+├── mvnw / mvnw.bat             # 🚀 Executáveis Maven
+├── .env / .env.example         # 🔐 Variáveis de ambiente do banco e porta
+└── src/main/
+    ├── resources/
+    │   ├── application.properties  # ⚙️ Config Hikari, Flyway e porta
+    │   └── db/migration/           # 🗄️ Scripts SQL do Flyway (V1__, V2__...)
+    └── java/com/example/
+        ├── controller/
+        │   └── ContratoController.java       # 🎯 Endpoints de contrato (/contratos/**)
+        ├── service/
+        │   └── ContratoService.java          # 🧠 Lógica de geração e encerramento de contratos
+        ├── repository/
+        │   └── ContratoRepository.java       # 🗄️ Persistência de Contrato (JPA)
+        ├── model/
+        │   └── Contrato.java                 # 💾 Entidade Contrato (FK pedido, datas, valor)
+        ├── dto/
+        │   ├── ContratoResponse.java         # 📦 Response DTO do Contrato
+        │   └── CriarContratoRequest.java     # 📦 Request DTO de criação
+        ├── mapper/
+        │   └── ContratoMapper.java           # 🔄 MapStruct: Contrato ↔ DTO
+        ├── enums/
+        │   └── StatusContrato.java           # 📋 Enum de status do contrato
+        ├── exception/
+        │   ├── BusinessException.java        # ⚠️ Exceção de regra de negócio
+        │   └── ResourceNotFoundException.java# ⚠️ Recurso não encontrado
+        └── Application.java                  # 🚀 Ponto de ignição do serviço
 ```
 
 ---
@@ -153,6 +403,8 @@ Codigo/server/[serviço]/
 - **Java 21**: Linguagem principal.
 - **Micronaut 4**: Framework ultrarrápido ideal para microserviços.
 - **Netty**: Servidor reativo assíncrono.
+- **MapStruct**: Mapeamento automático entre entidades e DTOs.
+- **Flyway**: Migrations versionadas do banco de dados.
 - **PostgreSQL**: Persistência de dados (Porta Host `5433` / Docker `5432`).
 - **PGWeb (Database Studio)**: Interface visual para o banco de dados (Porta `8090`).
 - **Docker & Docker Compose**: Orquestração de todo o ecossistema.
@@ -174,7 +426,7 @@ Sempre que os containers estiverem rodando (via `scripts/run-local.ps1` ou `dock
 - **Conexão**: A conexão é feita **automaticamente** pelo container (utilizando a `DATABASE_URL` interna).
 
 ### Funcionalidades principais:
-1.  **Visualizar Tabelas**: Na barra lateral esquerda, você encontrará tabelas como `agent`, `client`, `address`, `emprego`, etc.
+1.  **Visualizar Tabelas**: Na barra lateral esquerda, você encontrará as tabelas de cada microserviço (`agent`, `client`, `automovel`, `pedido`, `reserva`, `contrato`, etc.).
 2.  **Explorar Dados**: Clique em uma tabela para ver todos os registros inseridos.
 3.  **Executar SQL**: Use a aba **"Query"** para rodar comandos SQL manualmente.
 4.  **Exportação**: Você pode exportar tabelas inteiras para formatos como CSV ou JSON.
@@ -191,9 +443,8 @@ Para rodar todo o sistema de uma vez na sua máquina, é muito simples.
 - Node.js instalado.
 
 ### Configurando o Back-end
-1. Acesse os diretórios dos microserviços (`Codigo/server/microsservico` e `Codigo/server/microsservico-b`).
-2. Crie os arquivos `.env` copiando o padrão fornecido (para incluir as senhas e URLs locais).
-3. Abra o terminal na pasta `Codigo/server` e suba a orquestra inteira de uma vez via nosso script:
+1. Acesse os diretórios de cada microserviço e crie os arquivos `.env` copiando os padrões `.env.example` fornecidos (para incluir as senhas e URLs locais).
+2. Abra o terminal na pasta `Codigo/server` e suba a orquestra inteira de uma vez via nosso script:
    ```bash
    .\scripts\dev.cmd rebuild
    ```
