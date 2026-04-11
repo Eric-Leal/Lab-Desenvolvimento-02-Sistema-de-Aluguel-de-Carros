@@ -24,7 +24,7 @@ Ações disponíveis via `.\scripts\dev.cmd`:
 - `check`: Valida as rotas do Gateway via `http://localhost:8000` e o status do banco.
 - `logs`: Acompanha os logs em tempo real.
 - `rebuild`: Para, recompila tudo (Maven package) e reinicia os containers.
-- `down`: Para e remove os containers.
+- `down`: Para e remove os containers. oi
 
 > [!IMPORTANT]
 > **Fluxo de Desenvolvimento para Docker:**
