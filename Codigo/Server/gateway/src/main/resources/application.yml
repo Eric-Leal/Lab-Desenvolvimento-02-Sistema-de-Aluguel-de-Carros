@@ -25,11 +25,5 @@ micronaut:
     client:
       read-timeout: 30s
 
-# Propriedades de roteamento estatico (Docker DNS)
-proxy:
-  targets:
-    usersservice: "http://usersService:8080"
-    vehiclesservice: "http://vehiclesService:8081"
-    rentalsservice: "http://rentalsService:8082"
-    contratoservice: "http://contratoService:8083"
-    reservasservice: "http://reservasService:8084"
+# Targets de proxy configurados por ambiente (dev/prod)
+# Ver application-dev.yml e application-prod.yml
