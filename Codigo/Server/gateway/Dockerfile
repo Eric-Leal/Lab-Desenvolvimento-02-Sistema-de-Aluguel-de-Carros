@@ -1,11 +1,10 @@
 FROM eclipse-temurin:21-jdk-jammy AS build
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY .mvn .mvn
-COPY mvnw pom.xml ./
-RUN tr -d '\r' < mvnw > mvnw.fixed && mv mvnw.fixed mvnw && chmod +x mvnw
-RUN ./mvnw dependency:go-offline -q
+COPY pom.xml ./
+RUN mvn dependency:go-offline -q
 COPY src ./src
-RUN ./mvnw package -DskipTests -q
+RUN mvn package -DskipTests -q
 
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
