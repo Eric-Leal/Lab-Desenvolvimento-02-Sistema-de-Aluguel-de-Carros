@@ -1,0 +1,16 @@
+# URLs dos microsserviços no ambiente Render (cada um deploy separado)
+proxy:
+  targets:
+    usersservice: "${PROXY_TARGETS_USERSSERVICE}"
+    vehiclesservice: "${PROXY_TARGETS_VEHICLESSERVICE}"
+    rentalsservice: "${PROXY_TARGETS_RENTALSSERVICE}"
+    contratoservice: "${PROXY_TARGETS_CONTRATOSERVICE}"
+    reservasservice: "${PROXY_TARGETS_RESERVASSERVICE}"
+
+micronaut:
+  server:
+    cors:
+      configurations:
+        default:
+          allowed-origins-regex:
+            - ".*"

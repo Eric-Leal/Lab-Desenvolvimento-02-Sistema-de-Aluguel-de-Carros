@@ -109,6 +109,7 @@ services:
     environment:
       - JAVA_OPTS=-Xmx512m
       - MICRONAUT_SERVER_PORT=8000
+      - MICRONAUT_ENVIRONMENTS=dev
       - PROXY_TARGETS_USERSSERVICE=http://usersService:8080
       - PROXY_TARGETS_VEHICLESSERVICE=http://vehiclesService:8081
       - PROXY_TARGETS_RENTALSSERVICE=http://rentalsService:8082
