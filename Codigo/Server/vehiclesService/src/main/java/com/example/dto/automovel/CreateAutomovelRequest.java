@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Getter
@@ -24,11 +25,11 @@ public class CreateAutomovelRequest {
     private String modelo;
 
     @NotNull
+    private BigDecimal valorDiaria;
+
+    @NotNull
     private UUID locadorOriginalId;
 
-    /**
-     * Imagem principal obrigatória no cadastro (base64 com ou sem data URI prefix).
-     */
     @NotBlank
     private String imageBase64;
 }

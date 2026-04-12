@@ -8,6 +8,7 @@ import io.micronaut.data.annotation.MappedEntity;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -31,6 +32,8 @@ public class Automovel {
     private UUID locadorOriginalId;
 
     private UUID proprietarioAtualId;
+
+    private BigDecimal valorDiaria;
 
     private Boolean disponivel = true;
 

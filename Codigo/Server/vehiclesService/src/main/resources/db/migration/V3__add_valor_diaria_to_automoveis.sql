@@ -1,0 +1,2 @@
+ALTER TABLE automoveis
+    ADD COLUMN valor_diaria NUMERIC(10, 2) NOT NULL DEFAULT 0.00;
