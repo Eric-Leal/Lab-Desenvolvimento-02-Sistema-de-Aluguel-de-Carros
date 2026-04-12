@@ -66,6 +66,15 @@ public class AutomovelService {
     }
 
     @Executable
+    public List<AutomovelResponse> findAll() {
+        List<Automovel> all = new java.util.ArrayList<>();
+        automovelRepository.findAll().forEach(all::add);
+        return all.stream()
+            .map(this::toResponseWithImages)
+            .collect(Collectors.toList());
+    }
+
+    @Executable
     public List<AutomovelResponse> findByLocadorOriginalId(UUID locadorOriginalId) {
         return automovelRepository.findByLocadorOriginalId(locadorOriginalId)
             .stream()

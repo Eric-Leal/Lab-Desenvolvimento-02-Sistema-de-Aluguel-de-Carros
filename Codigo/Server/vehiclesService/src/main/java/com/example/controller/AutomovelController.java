@@ -38,6 +38,11 @@ public class AutomovelController {
         return HttpResponse.created(automovelService.create(request));
     }
 
+    @Get
+    public HttpResponse<List<AutomovelResponse>> getAll() {
+        return HttpResponse.ok(automovelService.findAll());
+    }
+
     @Get("/meus")
     public HttpResponse<List<AutomovelResponse>> getMeus(@QueryValue UUID locadorOriginalId) {
         return HttpResponse.ok(automovelService.findByLocadorOriginalId(locadorOriginalId));
