@@ -216,7 +216,7 @@ export default function DesignPage() {
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl space-y-5">
               <p className="ds-kicker">Documentação do design system</p>
-              <h1 className="ds-display text-text-primary">Precisão Concierge</h1>
+              <h1 className="ds-display text-text-primary">CarFlow</h1>
               <p className="ds-body-lg max-w-2xl">
                 Esta página centraliza as decisões visuais do client do sistema de aluguel de carros.
                 Ela foi pensada para consulta rápida durante implementação de telas, componentes e estados.
@@ -370,6 +370,75 @@ export default function DesignPage() {
             </div>
           </article>
         </section>
+
+        <section className="space-y-5">
+          <div>
+            <p className="ds-kicker">Logos</p>
+            <h2 className="ds-h2 mt-2 text-text-primary">Versões da marca (Light / Dark)</h2>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-3">
+            <article className="ds-card p-6">
+              <p className="ds-label text-text-brand">Horizontal (principal)</p>
+              <div className="mt-4 flex items-center justify-center gap-6">
+                <div className="text-center">
+                  <img src="/images/logos/carflow_horizontal_light_fixed.png" alt="CarFlow (light)" className="max-w-full h-auto" />
+                  <p className="mt-2 ds-caption">Light</p>
+                </div>
+                <div className="text-center">
+                  <img src="/images/logos/carflow_horizontal_dark_fixed.png" alt="CarFlow (dark)" className="max-w-full h-auto" />
+                  <p className="mt-2 ds-caption">Dark</p>
+                </div>
+              </div>
+              <p className="mt-4 ds-caption">Uso: header desktop, páginas públicas e materiais de marca.</p>
+            </article>
+
+            <article className="ds-card p-6">
+              <p className="ds-label text-text-brand">Empilhada</p>
+              <div className="mt-4 flex items-center justify-center gap-6">
+                <div className="text-center">
+                  <img src="/images/logos/carflow_vertical_light_fixed.png" alt="CarFlow stacked (light)" className="max-w-full h-auto" />
+                  <p className="mt-2 ds-caption">Light</p>
+                </div>
+                <div className="text-center">
+                  <img src="/images/logos/carflow_vertical_dark_fixed.png" alt="CarFlow stacked (dark)" className="max-w-full h-auto" />
+                  <p className="mt-2 ds-caption">Dark</p>
+                </div>
+              </div>
+              <p className="mt-4 ds-caption">Uso: telas de login, mobile quando o espaço horizontal for limitado.</p>
+            </article>
+
+            <article className="ds-card p-6">
+              <p className="ds-label text-text-brand">Marca (ícone)</p>
+              <div className="mt-4 flex items-center justify-center gap-6">
+                <div className="text-center">
+                  <img src="/images/logos/carflow_icon_only_light_fixed.png" alt="CarFlow mark (light)" className="w-20 h-auto mx-auto" />
+                  <p className="mt-2 ds-caption">Light</p>
+                </div>
+                <div className="text-center">
+                  <img src="/images/logos/carflow_icon_only_dark_fixed.png" alt="CarFlow mark (dark)" className="w-20 h-auto mx-auto" />
+                  <p className="mt-2 ds-caption">Dark</p>
+                </div>
+              </div>
+              <p className="mt-4 ds-caption">Uso: favicon, botões, avatars e contextos de espaço reduzido.</p>
+            </article>
+          </div>
+
+          <article className="ds-card p-6">
+            <p className="ds-label text-text-brand">Regras rápidas</p>
+            <ul className="mt-4 space-y-2 ds-body">
+              <li>Use a variante <strong>light</strong> em fundos claros e a variante <strong>dark</strong> em fundos escuros.</li>
+              <li>Mantenha a área de respiro mínima (altura da letra "F").</li>
+              <li>Preferir SVG para novas exportações; estes PNGs são as versões finais aprovadas pelo design team.</li>
+            </ul>
+          </article>
+        </section>
+      </div>
+
+      <div className="fixed bottom-6 right-6 z-50">
+        <div className="rounded-full border border-border bg-surface p-2 height-10 w-10 flex items-center justify-center shadow-lg">
+          <AnimatedThemeToggler aria-label="Alternar tema" />
+        </div>
       </div>
     </main>
   )

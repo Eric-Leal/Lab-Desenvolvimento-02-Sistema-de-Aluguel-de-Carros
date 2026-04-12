@@ -215,3 +215,57 @@ Badges no formato "pill" (`radius.full`) com fundo sutil e texto de alto contras
 - **Tipografia Headings:** DM Serif Display
 - **Tipografia Body:** DM Sans
 - **Accent (preços/CTAs):** `accent.500` = `#D98704` (light) / `accent.300` = `#FDCB70` (dark)
+
+---
+
+## 11. Logos e Identidade
+
+Colocamos as versões da marca na pasta `public/images/logos` dentro do projeto `client`. Arquivos colocados em `public` são servidos estaticamente pelo Next.js em runtime — por exemplo `/images/logos/carflow_horizontal_light_fixed.png`.
+
+Principais variantes e recomendações:
+
+Arquivos atuais (PNG) disponibilizados em `public/images/logos`:
+
+- `carflow_horizontal_light_fixed.png` — marca horizontal para fundos claros (uso principal no header e páginas públicas).
+- `carflow_horizontal_dark_fixed.png` — marca horizontal otimizada para fundos escuros.
+- `carflow_vertical_light_fixed.png` — versão empilhada (marca acima do nome) para telas com espaço vertical.
+- `carflow_vertical_dark_fixed.png` — versão empilhada para fundos escuros.
+- `carflow_icon_only_light_fixed.png` — somente o símbolo (ícone do carro) para usos reduzidos em fundos claros.
+- `carflow_icon_only_dark_fixed.png` — ícone para fundos escuros.
+
+Observação: as logos atuais são PNGs exportadas pelo time de design. Preferimos SVG quando for necessário escalar sem perda e manipular cores por CSS, mas mantemos estes PNGs como as versões finais aprovadas.
+
+Regras de uso:
+
+- Espaço seguro: mantenha uma margem mínima equivalente à altura da letra "F" do logotipo ao redor de qualquer variante (não sobrepor texto ou elementos gráficos).
+- Tamanho mínimo: a versão horizontal não deve ficar menor que `120px` de largura em contextos legíveis; a `logo-mark` não menor que `32px` de largura.
+- Cores: não altere as cores do logotipo. Use `logo-dark.svg` em fundos claros e `logo-light.svg` em fundos escuros. Para necessidades especiais, use a `logo-mark` com tintas de spot aprovadas pelo design team.
+- Não faça stretch: preserve aspect ratio. Use `width` ou `height` e deixe o outro lado em auto.
+- Acessibilidade: sempre inclua `alt` descritivo, ex.: `alt="CarFlow — aluguel de carros"`.
+
+Quando usar cada variante:
+
+-- Header (desktop): use `carflow_horizontal_light_fixed.png` (ou `carflow_horizontal_dark_fixed.png` para fundos escuros). Preferir contraste e alinhamento vertical com a navegação.
+-- Header (mobile): use `carflow_icon_only_light_fixed.png` ou `carflow_vertical_light_fixed.png` quando houver espaço vertical suficiente.
+-- Botões/ícones: `carflow_icon_only_*` com padding interno consistente (`8px`).
+-- Páginas de marketing e hero: use a variante horizontal ou empilhada em alta resolução conforme o layout.
+
+Referências de implementação (exemplos):
+
+HTML:
+
+```html
+<img src="/images/logos/carflow_horizontal_light_fixed.png" alt="CarFlow — aluguel de carros" />
+```
+
+Next/Image:
+
+```tsx
+import Image from 'next/image'
+
+<Image src="/images/logos/carflow_horizontal_light_fixed.png" alt="CarFlow" width={160} height={48} />
+```
+
+Inline SVG (quando for necessário manipular cor via CSS): mova o SVG para `src/assets` e importe como componente React (requer loader). Use essa abordagem apenas para a `logo-mark` quando precisar alterar cor dinamicamente.
+
+Manter os arquivos de logo versionados no repositório; não ignorar em `.gitignore`.
