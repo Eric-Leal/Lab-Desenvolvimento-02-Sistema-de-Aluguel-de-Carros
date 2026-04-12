@@ -25,4 +25,6 @@ public class UpdateAgentRequest {
     @Valid
     @JsonProperty("endereço")
     private UpdateAddressDTO address;
+
+    private String imageBase64;
 }

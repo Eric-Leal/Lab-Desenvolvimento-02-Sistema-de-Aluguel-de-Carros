@@ -10,6 +10,8 @@ import com.example.exception.ResourceNotFoundException;
 import com.example.mapper.agent.AgentMapper;
 import com.example.model.agent.Agent;
 import com.example.repository.agent.AgentRepository;
+import com.example.service.cloudinary.CloudinaryService;
+import com.example.service.cloudinary.CloudinaryUploadResult;
 import com.example.util.PasswordValidator;
 import io.micronaut.context.annotation.Executable;
 import jakarta.inject.Singleton;
@@ -25,6 +27,7 @@ public class AgentService {
 
     private final AgentRepository agentRepository;
     private final AgentMapper agentMapper;
+    private final CloudinaryService cloudinaryService;
 
     @Executable
     public AgentResponse createAgent(CreateAgentRequest request) {
@@ -46,7 +49,16 @@ public class AgentService {
         String hashedPassword = BCrypt.hashpw(request.getPassword(), BCrypt.gensalt());
         agent.setPasswordHash(hashedPassword);
 
-        return agentMapper.toResponse(agentRepository.save(agent));
+        Agent savedAgent = agentRepository.save(agent);
+
+        if (request.getImageBase64() != null && !request.getImageBase64().isBlank()) {
+            CloudinaryUploadResult uploadResult = cloudinaryService.uploadBase64UserImage(request.getImageBase64(), "agent", savedAgent.getId());
+            savedAgent.setImageUrl(uploadResult.imageUrl());
+            savedAgent.setImagePublicId(uploadResult.publicId());
+            savedAgent = agentRepository.update(savedAgent);
+        }
+
+        return agentMapper.toResponse(savedAgent);
     }
 
     @Executable
@@ -56,15 +68,13 @@ public class AgentService {
 
         agentMapper.updateEntity(request, agent);
 
+        if (request.getImageBase64() != null && !request.getImageBase64().isBlank()) {
+            CloudinaryUploadResult uploadResult = cloudinaryService.uploadBase64UserImage(request.getImageBase64(), "agent", id);
+            agent.setImageUrl(uploadResult.imageUrl());
+            agent.setImagePublicId(uploadResult.publicId());
+        }
+
         return agentMapper.toResponse(agentRepository.update(agent));
-    }
-
-    @Executable
-    public void deleteAgent(UUID id) {
-        agentRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Agente", id.toString()));
-
-        agentRepository.deleteById(id);
     }
 
     @Executable
@@ -75,7 +85,40 @@ public class AgentService {
     }
 
     @Executable
+    public AgentResponse uploadImage(UUID id, byte[] fileBytes, String contentType) {
+        Agent agent = agentRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Agente", id.toString()));
+
+        CloudinaryUploadResult uploadResult = cloudinaryService.uploadUserImage(fileBytes, contentType, "agent", id);
+        agent.setImageUrl(uploadResult.imageUrl());
+        agent.setImagePublicId(uploadResult.publicId());
+
+        return agentMapper.toResponse(agentRepository.update(agent));
+    }
+
+    @Executable
+    public AgentResponse removeImage(UUID id) {
+        Agent agent = agentRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Agente", id.toString()));
+
+        cloudinaryService.deleteImage(agent.getImagePublicId());
+        agent.setImageUrl(null);
+        agent.setImagePublicId(null);
+
+        return agentMapper.toResponse(agentRepository.update(agent));
+    }
+
+    @Executable
     public List<AgentResponse> findAll() {
         return agentMapper.toResponseList(agentRepository.findAll());
+    }
+
+    @Executable
+    public void deleteAgent(UUID id) {
+        Agent agent = agentRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Agente", id.toString()));
+
+        cloudinaryService.deleteImage(agent.getImagePublicId());
+        agentRepository.deleteById(id);
     }
 }

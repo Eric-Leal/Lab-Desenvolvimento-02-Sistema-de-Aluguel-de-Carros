@@ -5,15 +5,19 @@ import com.example.dto.client.CreateClientRequest;
 import com.example.dto.client.UpdateClientRequest;
 import com.example.dto.common.EmpregoDTO;
 import com.example.service.client.ClientService;
+import io.micronaut.http.MediaType;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
+import io.micronaut.http.annotation.Consumes;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Delete;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Patch;
+import io.micronaut.http.annotation.Part;
 import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.HttpStatus;
+import io.micronaut.http.multipart.CompletedFileUpload;
 import io.micronaut.http.exceptions.HttpStatusException;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.authentication.Authentication;
@@ -76,5 +80,25 @@ public class ClientController {
         }
         clientService.delete(id);
         return HttpResponse.noContent();
+    }
+
+    @Patch(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    public HttpResponse<ClientResponse> uploadImage(@PathVariable UUID id, @Part("file") CompletedFileUpload file, Authentication authentication) throws java.io.IOException {
+        if (!id.toString().equals(authentication.getName())) {
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para fazer isso.");
+        }
+        String contentType = file.getContentType().map(MediaType::toString).orElse(null);
+        return HttpResponse.ok(clientService.uploadImage(id, file.getBytes(), contentType));
+    }
+
+    @Delete("/{id}/image")
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    public HttpResponse<ClientResponse> removeImage(@PathVariable UUID id, Authentication authentication) {
+        if (!id.toString().equals(authentication.getName())) {
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para fazer isso.");
+        }
+        return HttpResponse.ok(clientService.removeImage(id));
     }
 }

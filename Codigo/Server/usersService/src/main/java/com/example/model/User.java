@@ -31,6 +31,10 @@ public class User {
     @Pattern(regexp = "\\d{11}|\\d{14}", message = "Documento deve conter 11 (CPF) ou 14 (CNPJ) dígitos numéricos")
     private String documento;
 
+    private String imageUrl;
+
+    private String imagePublicId;
+
     @Embedded
     private Address address;
 }

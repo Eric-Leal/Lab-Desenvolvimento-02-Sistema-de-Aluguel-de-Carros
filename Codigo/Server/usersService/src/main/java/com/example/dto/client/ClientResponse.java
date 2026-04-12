@@ -21,6 +21,7 @@ public class ClientResponse {
     private String nome;
     private String email;
     private String documento;
+    private String imageUrl;
     private String profissao;
     private String rg;
 

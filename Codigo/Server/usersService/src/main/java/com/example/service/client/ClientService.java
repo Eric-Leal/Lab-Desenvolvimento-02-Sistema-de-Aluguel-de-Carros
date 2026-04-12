@@ -13,6 +13,8 @@ import com.example.model.client.Client;
 import com.example.model.client.Emprego;
 import com.example.repository.client.ClientRepository;
 import com.example.repository.client.EmpregoRepository;
+import com.example.service.cloudinary.CloudinaryService;
+import com.example.service.cloudinary.CloudinaryUploadResult;
 import com.example.util.PasswordValidator;
 import io.micronaut.context.annotation.Executable;
 import jakarta.inject.Singleton;
@@ -29,6 +31,7 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final EmpregoRepository empregoRepository;
     private final ClientMapper clientMapper;
+    private final CloudinaryService cloudinaryService;
 
     @Executable
     public ClientResponse create(CreateClientRequest request) {
@@ -54,7 +57,16 @@ public class ClientService {
         String hashedPassword = BCrypt.hashpw(request.getPassword(), BCrypt.gensalt());
         client.setPasswordHash(hashedPassword);
 
-        return clientMapper.toResponse(clientRepository.save(client));
+        Client savedClient = clientRepository.save(client);
+
+        if (request.getImageBase64() != null && !request.getImageBase64().isBlank()) {
+            CloudinaryUploadResult uploadResult = cloudinaryService.uploadBase64UserImage(request.getImageBase64(), "client", savedClient.getId());
+            savedClient.setImageUrl(uploadResult.imageUrl());
+            savedClient.setImagePublicId(uploadResult.publicId());
+            savedClient = clientRepository.update(savedClient);
+        }
+
+        return clientMapper.toResponse(savedClient);
     }
 
     @Executable
@@ -63,6 +75,12 @@ public class ClientService {
             .orElseThrow(() -> new ResourceNotFoundException("Cliente", id.toString()));
 
         clientMapper.updateEntity(request, client);
+
+        if (request.getImageBase64() != null && !request.getImageBase64().isBlank()) {
+            CloudinaryUploadResult uploadResult = cloudinaryService.uploadBase64UserImage(request.getImageBase64(), "client", id);
+            client.setImageUrl(uploadResult.imageUrl());
+            client.setImagePublicId(uploadResult.publicId());
+        }
 
         return clientMapper.toResponse(clientRepository.update(client));
     }
@@ -90,15 +108,40 @@ public class ClientService {
     }
 
     @Executable
+    public ClientResponse uploadImage(UUID id, byte[] fileBytes, String contentType) {
+        Client client = clientRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Cliente", id.toString()));
+
+        CloudinaryUploadResult uploadResult = cloudinaryService.uploadUserImage(fileBytes, contentType, "client", id);
+        client.setImageUrl(uploadResult.imageUrl());
+        client.setImagePublicId(uploadResult.publicId());
+
+        return clientMapper.toResponse(clientRepository.update(client));
+    }
+
+    @Executable
+    public ClientResponse removeImage(UUID id) {
+        Client client = clientRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Cliente", id.toString()));
+
+        cloudinaryService.deleteImage(client.getImagePublicId());
+        client.setImageUrl(null);
+        client.setImagePublicId(null);
+
+        return clientMapper.toResponse(clientRepository.update(client));
+    }
+
+    @Executable
     public List<ClientResponse> findAll() {
         return clientMapper.toResponseList(clientRepository.findAll());
     }
 
     @Executable
     public void delete(UUID id) {
-        clientRepository.findById(id)
+        Client client = clientRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Cliente", id.toString()));
 
+        cloudinaryService.deleteImage(client.getImagePublicId());
         clientRepository.deleteById(id);
     }
 }

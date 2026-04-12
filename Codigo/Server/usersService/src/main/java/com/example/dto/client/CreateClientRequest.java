@@ -45,4 +45,6 @@ public class CreateClientRequest {
     private CreateAddressDTO address;
 
     private List<EmpregoDTO> empregos;
+
+    private String imageBase64;
 }

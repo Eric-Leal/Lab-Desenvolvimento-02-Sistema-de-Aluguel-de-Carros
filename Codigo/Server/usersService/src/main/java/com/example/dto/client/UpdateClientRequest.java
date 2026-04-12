@@ -27,4 +27,6 @@ public class UpdateClientRequest {
     @Valid
     @JsonProperty("endereço")
     private UpdateAddressDTO address;
+
+    private String imageBase64;
 }

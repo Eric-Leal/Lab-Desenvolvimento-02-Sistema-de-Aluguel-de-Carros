@@ -17,6 +17,7 @@ public class AgentResponse {
     private String nome;
     private String email;
     private String documento;
+    private String imageUrl;
 
     @JsonProperty("endereço")
     private AddressDTO address;

@@ -39,4 +39,6 @@ public class CreateAgentRequest {
     @NotNull(message = "O endereço é obrigatório")
     @JsonProperty("endereço")
     private CreateAddressDTO address;
+
+    private String imageBase64;
 }
