@@ -40,12 +40,16 @@ public class ProxyFacadeService {
         }
 
         final String finalPathToUse = tempPath;
+        String rawQuery = originalRequest.getUri().getRawQuery();
+        String targetUri = (rawQuery == null || rawQuery.isBlank())
+            ? finalPathToUse
+            : finalPathToUse + "?" + rawQuery;
         System.out.println("[GATEWAY FACADE] Resolving Proxy Request to internal path: " + finalPathToUse);
 
         String origin = originalRequest.getHeaders().get("Origin");
 
         HttpRequest<?> finalRequest = originalRequest.mutate()
-                .uri(java.net.URI.create(finalPathToUse));
+            .uri(java.net.URI.create(targetUri));
 
         return Flux.from(targetClient.proxy(finalRequest)).map(res -> applyCorsHeaders(res, origin));
     }

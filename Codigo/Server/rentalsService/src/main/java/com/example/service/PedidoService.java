@@ -99,6 +99,15 @@ public class PedidoService {
         return pedidoMapper.toResponse(pedidoRepository.update(pedido));
     }
 
+    @Executable
+    public void excluirRascunho(UUID id) {
+        Pedido pedido = getPedidoOrThrow(id);
+        if (!StatusGeral.RASCUNHO.name().equals(pedido.getStatusGeral())) {
+            throw new InvalidStatusTransitionException("Apenas pedidos em RASCUNHO podem ser excluídos.");
+        }
+        pedidoRepository.delete(pedido);
+    }
+
     // --- Endpoints do Agente ---
 
     @Executable

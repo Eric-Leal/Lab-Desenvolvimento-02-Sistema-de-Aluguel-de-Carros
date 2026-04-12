@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ChevronLeft } from "lucide-react"
-import { Navbar } from "@/components/navbar/Navbar"
+import { Navbar } from "@/components/navbar/NavbarV1"
 import { DevClientSelector } from "@/components/dev/DevClientSelector"
 import { PedidoDetailClient } from "@/components/pedidos/PedidoDetailClient"
 import { rentalsService } from "@/services/rentals.service"

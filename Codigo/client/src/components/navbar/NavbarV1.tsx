@@ -38,6 +38,12 @@ export function Navbar() {
           >
             Veículos
           </Link>
+          <Link
+            href="/pedidos"
+            className="ds-body font-medium text-text-secondary transition-colors hover:text-text-primary"
+          >
+            Meus Pedidos
+          </Link>
         </div>
 
         <div className="flex items-center gap-3">

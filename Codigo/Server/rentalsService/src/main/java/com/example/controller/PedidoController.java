@@ -8,6 +8,7 @@ import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Delete;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Patch;
 import io.micronaut.http.annotation.PathVariable;
@@ -90,6 +91,17 @@ public class PedidoController {
     @Patch("/{id}/cancelar")
     public HttpResponse<PedidoResponse> cancelar(@PathVariable UUID id) {
         return HttpResponse.ok(pedidoService.cancelar(id));
+    }
+
+    /**
+     * DELETE /pedidos/{id}
+     * Ator: Cliente
+     * Exclui pedido em RASCUNHO.
+     */
+    @Delete("/{id}")
+    public HttpResponse<Void> excluirRascunho(@PathVariable UUID id) {
+        pedidoService.excluirRascunho(id);
+        return HttpResponse.noContent();
     }
 
     // --- Endpoints do Agente ---

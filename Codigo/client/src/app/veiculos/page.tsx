@@ -1,4 +1,4 @@
-import { Navbar } from "@/components/navbar/Navbar"
+import { Navbar } from "@/components/navbar/NavbarV1"
 import { VehicleGrid } from "@/components/veiculos/VehicleGrid"
 import { vehiclesService } from "@/services/vehicles.service"
 import { usersService } from "@/services/users.service"
