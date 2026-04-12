@@ -7,6 +7,14 @@ export interface AgentBasic {
   imageUrl?: string;
 }
 
+export interface ClientBasic {
+  id: string;
+  nome: string;
+  email: string;
+  rendimentoTotal: number;
+  profissao?: string;
+}
+
 export const usersService = {
   ping: async () => {
     const response = await fetch(`${API_ENDPOINTS.usersService}/ping`);
@@ -35,5 +43,13 @@ export const usersService = {
       }
     });
     return map;
+  },
+
+  buscarClient: async (id: string): Promise<ClientBasic> => {
+    const response = await fetch(`${API_ENDPOINTS.usersService}/client/${id}`, {
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error(`Client ${id} não encontrado`);
+    return response.json();
   },
 };

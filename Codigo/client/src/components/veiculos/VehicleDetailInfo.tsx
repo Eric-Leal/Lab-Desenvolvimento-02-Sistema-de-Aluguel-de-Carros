@@ -1,3 +1,4 @@
+import Link from "next/link"
 import type { Automovel } from "@/types/vehicle"
 
 interface VehicleDetailInfoProps {
@@ -54,12 +55,21 @@ export function VehicleDetailInfo({ vehicle }: VehicleDetailInfoProps) {
         ))}
       </div>
 
-      <button
-        disabled={!vehicle.disponivel}
-        className="w-full rounded-xl bg-(--primary-700) py-4 text-base font-semibold text-white transition-colors hover:bg-(--primary-800) active:bg-(--primary-900) disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        Solicitar Aluguel
-      </button>
+      {vehicle.disponivel ? (
+        <Link
+          href={`/veiculos/${vehicle.matricula}/solicitar`}
+          className="block w-full rounded-xl bg-(--primary-700) py-4 text-center text-base font-semibold text-white transition-colors hover:bg-(--primary-800) active:bg-(--primary-900)"
+        >
+          Solicitar Aluguel
+        </Link>
+      ) : (
+        <button
+          disabled
+          className="w-full rounded-xl bg-(--primary-700) py-4 text-base font-semibold text-white opacity-40 cursor-not-allowed"
+        >
+          Indisponível
+        </button>
+      )}
     </div>
   )
 }
