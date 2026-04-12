@@ -6,18 +6,23 @@ import com.example.dto.automovel.UpdateAutomovelRequest;
 import com.example.dto.automovel.UpdateProprietarioRequest;
 import com.example.service.AutomovelService;
 import io.micronaut.http.HttpResponse;
+import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
+import io.micronaut.http.annotation.Consumes;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Delete;
 import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Part;
 import io.micronaut.http.annotation.Patch;
 import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Put;
 import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.http.multipart.CompletedFileUpload;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,51 +33,26 @@ public class AutomovelController {
 
     private final AutomovelService automovelService;
 
-    /**
-     * POST /automoveis
-     * Ator: Agente locador (EMPRESA ou LOCADOR_PESSOA_FISICA)
-     * Cadastra novo automóvel. locadorOriginalId deve ser o ID do agente autenticado.
-     */
     @Post
     public HttpResponse<AutomovelResponse> create(@Body @Valid CreateAutomovelRequest request) {
         return HttpResponse.created(automovelService.create(request));
     }
 
-    /**
-     * GET /automoveis/meus?locadorOriginalId={uuid}
-     * Ator: Agente locador
-     * Lista os automóveis do agente. Quando segurança estiver habilitada, extrair do JWT.
-     */
     @Get("/meus")
     public HttpResponse<List<AutomovelResponse>> getMeus(@QueryValue UUID locadorOriginalId) {
         return HttpResponse.ok(automovelService.findByLocadorOriginalId(locadorOriginalId));
     }
 
-    /**
-     * GET /automoveis/disponiveis
-     * Ator: Qualquer autenticado (cliente)
-     * Lista automóveis com disponivel = true.
-     */
     @Get("/disponiveis")
     public HttpResponse<List<AutomovelResponse>> getDisponiveis() {
         return HttpResponse.ok(automovelService.findDisponiveis());
     }
 
-    /**
-     * GET /automoveis/{matricula}
-     * Ator: Qualquer autenticado
-     * Busca automóvel pela matrícula.
-     */
     @Get("/{matricula}")
     public HttpResponse<AutomovelResponse> getByMatricula(@PathVariable Long matricula) {
         return HttpResponse.ok(automovelService.findByMatricula(matricula));
     }
 
-    /**
-     * PUT /automoveis/{matricula}
-     * Ator: Agente locador dono do automóvel
-     * Atualiza dados editáveis (placa, ano, marca, modelo).
-     */
     @Put("/{matricula}")
     public HttpResponse<AutomovelResponse> update(
             @PathVariable Long matricula,
@@ -80,22 +60,12 @@ public class AutomovelController {
         return HttpResponse.ok(automovelService.update(matricula, request));
     }
 
-    /**
-     * DELETE /automoveis/{matricula}
-     * Ator: Agente locador dono do automóvel
-     * Remove automóvel (futuramente verificar pedido ativo no rentalsService).
-     */
     @Delete("/{matricula}")
     public HttpResponse<Void> delete(@PathVariable Long matricula) {
         automovelService.delete(matricula);
         return HttpResponse.noContent();
     }
 
-    /**
-     * PATCH /automoveis/{matricula}/proprietario
-     * Ator: Interno — contractsService
-     * Atualiza proprietario_atual_id (ex: transferência durante contrato de crédito).
-     */
     @Patch("/{matricula}/proprietario")
     public HttpResponse<AutomovelResponse> updateProprietario(
             @PathVariable Long matricula,
@@ -103,13 +73,31 @@ public class AutomovelController {
         return HttpResponse.ok(automovelService.updateProprietario(matricula, request));
     }
 
-    /**
-     * GET /automoveis/{matricula}/locador-original
-     * Ator: Interno — rentalsService / contractsService
-     * Retorna o locador_original_id para consulta por outros microserviços.
-     */
     @Get("/{matricula}/locador-original")
     public HttpResponse<Map<String, UUID>> getLocadorOriginal(@PathVariable Long matricula) {
         return HttpResponse.ok(Map.of("locadorOriginalId", automovelService.getLocadorOriginalId(matricula)));
+    }
+
+    /**
+     * POST /automoveis/{matricula}/imagens
+     * Adiciona uma imagem ao veículo via multipart (máximo 3 imagens).
+     */
+    @Post(value = "/{matricula}/imagens", consumes = MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public HttpResponse<AutomovelResponse> addImageMultipart(
+            @PathVariable Long matricula,
+            @Part("file") CompletedFileUpload file) throws IOException {
+        return HttpResponse.created(automovelService.addImageMultipart(matricula, file));
+    }
+
+    /**
+     * DELETE /automoveis/{matricula}/imagens/{imageId}
+     * Remove uma imagem do veículo (mínimo 1 imagem deve permanecer).
+     */
+    @Delete("/{matricula}/imagens/{imageId}")
+    public HttpResponse<AutomovelResponse> removeImage(
+            @PathVariable Long matricula,
+            @PathVariable UUID imageId) {
+        return HttpResponse.ok(automovelService.removeImage(matricula, imageId));
     }
 }

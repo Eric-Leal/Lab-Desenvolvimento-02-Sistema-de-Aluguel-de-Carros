@@ -25,8 +25,10 @@ public interface AutomovelMapper {
     @Mapping(target = "atualizadoEm", ignore = true)
     Automovel toEntity(CreateAutomovelRequest request);
 
+    @Mapping(target = "imagens", ignore = true)
     AutomovelResponse toResponse(Automovel automovel);
 
+    @Mapping(target = "imagens", ignore = true)
     List<AutomovelResponse> toResponseList(List<Automovel> automoveis);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

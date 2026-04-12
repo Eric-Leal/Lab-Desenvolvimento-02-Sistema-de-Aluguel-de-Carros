@@ -25,4 +25,10 @@ public class CreateAutomovelRequest {
 
     @NotNull
     private UUID locadorOriginalId;
+
+    /**
+     * Imagem principal obrigatória no cadastro (base64 com ou sem data URI prefix).
+     */
+    @NotBlank
+    private String imageBase64;
 }
