@@ -22,6 +22,9 @@ import jakarta.inject.Singleton;
 import lombok.AllArgsConstructor;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.Year;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -43,6 +46,8 @@ public class AutomovelService {
 
     @Executable
     public AutomovelResponse create(CreateAutomovelRequest request) {
+        validateAnoAndValor(request.getAno(), request.getValorDiaria());
+
         automovelRepository.findByPlaca(request.getPlaca())
             .ifPresent(existing -> {
                 throw new PlacaAlreadyInUseException(request.getPlaca());
@@ -51,16 +56,29 @@ public class AutomovelService {
         Automovel automovel = automovelMapper.toEntity(request);
         automovel = automovelRepository.save(automovel);
 
-        // Upload da imagem principal (obrigat\u00f3ria)
-        String publicId = buildPublicId(automovel.getMatricula(), UUID.randomUUID());
-        CloudinaryUploadResult uploadResult = cloudinaryService.uploadBase64Image(request.getImageBase64(), publicId);
+        List<String> imagens = new ArrayList<>();
+        imagens.add(request.getImageBase64());
+        if (request.getImagesBase64() != null) {
+            request.getImagesBase64().stream()
+                .filter(base64 -> base64 != null && !base64.isBlank())
+                .forEach(imagens::add);
+        }
 
-        AutomovelImagem imagem = new AutomovelImagem();
-        imagem.setAutomovelMatricula(automovel.getMatricula());
-        imagem.setImageUrl(uploadResult.imageUrl());
-        imagem.setImagePublicId(uploadResult.publicId());
-        imagem.setOrdem(0);
-        automovelImagemRepository.save(imagem);
+        if (imagens.size() > MAX_IMAGENS) {
+            throw new BusinessException("Limite de " + MAX_IMAGENS + " imagens por veículo atingido.");
+        }
+
+        for (int ordem = 0; ordem < imagens.size(); ordem++) {
+            String publicId = buildPublicId(automovel.getMatricula(), UUID.randomUUID());
+            CloudinaryUploadResult uploadResult = cloudinaryService.uploadBase64Image(imagens.get(ordem), publicId);
+
+            AutomovelImagem imagem = new AutomovelImagem();
+            imagem.setAutomovelMatricula(automovel.getMatricula());
+            imagem.setImageUrl(uploadResult.imageUrl());
+            imagem.setImagePublicId(uploadResult.publicId());
+            imagem.setOrdem(ordem);
+            automovelImagemRepository.save(imagem);
+        }
 
         return toResponseWithImages(automovel);
     }
@@ -102,6 +120,8 @@ public class AutomovelService {
         Automovel automovel = automovelRepository.findById(matricula)
             .orElseThrow(() -> new AutomovelNotFoundException(matricula));
 
+        validateAnoAndValor(request.getAno(), request.getValorDiaria());
+
         if (request.getPlaca() != null && !request.getPlaca().equals(automovel.getPlaca())) {
             automovelRepository.findByPlaca(request.getPlaca())
                 .ifPresent(existing -> {
@@ -115,8 +135,12 @@ public class AutomovelService {
 
     @Executable
     public void delete(Long matricula) {
-        automovelRepository.findById(matricula)
+        Automovel automovel = automovelRepository.findById(matricula)
             .orElseThrow(() -> new AutomovelNotFoundException(matricula));
+
+        if (Boolean.FALSE.equals(automovel.getDisponivel())) {
+            throw new BusinessException("Veículo indisponível (em locação) não pode ser excluído.");
+        }
 
         // Remove imagens do Cloudinary antes de deletar
         automovelImagemRepository.findByAutomovelMatricula(matricula)
@@ -238,6 +262,22 @@ public class AutomovelService {
 
     private String buildPublicId(Long matricula, UUID uniqueSuffix) {
         return "vehicle-" + matricula + "-" + uniqueSuffix.toString().replace("-", "").substring(0, 8);
+    }
+
+    private void validateAnoAndValor(Integer ano, BigDecimal valorDiaria) {
+        if (ano != null) {
+            int currentYear = Year.now().getValue();
+            if (ano <= 0) {
+                throw new BusinessException("Ano deve ser maior que zero.");
+            }
+            if (ano > currentYear) {
+                throw new BusinessException("Ano não pode ser futuro.");
+            }
+        }
+
+        if (valorDiaria != null && valorDiaria.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("Valor da diária deve ser maior que zero.");
+        }
     }
 }
 

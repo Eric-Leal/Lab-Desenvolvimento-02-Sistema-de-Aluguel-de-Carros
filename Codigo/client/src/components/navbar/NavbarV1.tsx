@@ -44,6 +44,12 @@ export function Navbar() {
           >
             Pedidos
           </Link>
+          <Link
+            href="/veiculos/gestao"
+            className="ds-body font-medium text-text-secondary transition-colors hover:text-text-primary"
+          >
+            Gestão
+          </Link>
         </div>
 
         <div className="flex items-center gap-3">
