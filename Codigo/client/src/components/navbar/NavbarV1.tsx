@@ -42,7 +42,7 @@ export function Navbar() {
             href="/pedidos"
             className="ds-body font-medium text-text-secondary transition-colors hover:text-text-primary"
           >
-            Meus Pedidos
+            Pedidos
           </Link>
         </div>
 

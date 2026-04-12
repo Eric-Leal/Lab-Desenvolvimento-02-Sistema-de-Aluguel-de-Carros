@@ -180,3 +180,33 @@ SELECT
     4500.00,
     true, NULL, 'APROVADO', 'EM_ANALISE_BANCO'
 FROM automoveis WHERE placa = 'JKL0M12';
+
+-- -----------------------------------------------------------------------------
+-- PEDIDOS FECHADOS (para testes de interface em "Meus Pedidos" e "Histórico")
+-- -----------------------------------------------------------------------------
+
+-- Contrato fechado sem financiamento (fluxo direto locação)
+INSERT INTO pedidos (id, cliente_id, automovel_matricula, data_inicio, data_fim, valor_total,
+    requer_financiamento, banco_id, status_locador, status_geral)
+SELECT
+    gen_random_uuid(),
+    'c1000000-0000-0000-0000-000000000001',
+    matricula,
+    CURRENT_DATE - INTERVAL '20 days',
+    CURRENT_DATE - INTERVAL '12 days',
+    1200.00,
+    false, NULL, 'APROVADO', 'CONTRATO_FECHADO'
+FROM automoveis WHERE placa = 'ABC1D23';
+
+-- Contrato fechado com financiamento aprovado pelo banco
+INSERT INTO pedidos (id, cliente_id, automovel_matricula, data_inicio, data_fim, valor_total,
+    requer_financiamento, banco_id, status_locador, status_geral)
+SELECT
+    gen_random_uuid(),
+    'c1000000-0000-0000-0000-000000000003',
+    matricula,
+    CURRENT_DATE - INTERVAL '15 days',
+    CURRENT_DATE - INTERVAL '2 days',
+    4200.00,
+    true, 'a1000000-0000-0000-0000-000000000003', 'APROVADO', 'CONTRATO_FECHADO'
+FROM automoveis WHERE placa = 'JKL0M12';

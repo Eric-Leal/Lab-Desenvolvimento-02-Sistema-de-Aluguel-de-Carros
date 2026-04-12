@@ -1,13 +1,22 @@
+import Link from "next/link"
 import { Navbar } from "@/components/navbar/NavbarV1"
 import { DevClientSelector } from "@/components/dev/DevClientSelector"
 import { MeusPedidosClient } from "@/components/pedidos/MeusPedidosClient"
+import { HistoricoLocacoesClient } from "@/components/pedidos/HistoricoLocacoesClient"
 
 export const metadata = {
   title: "Meus Pedidos — CarFlow",
   description: "Gerencie seus pedidos de aluguel: rascunhos, submissões, cancelamentos e status.",
 }
 
-export default function MeusPedidosPage() {
+interface Props {
+  searchParams: Promise<{ tab?: string }>
+}
+
+export default async function MeusPedidosPage({ searchParams }: Props) {
+  const { tab } = await searchParams
+  const activeTab = tab === "historico" ? "historico" : "pedidos"
+
   return (
     <div className="min-h-screen bg-page">
       <DevClientSelector />
@@ -26,16 +35,39 @@ export default function MeusPedidosPage() {
             Painel do Cliente
           </p>
           <h1 className="mt-2 text-4xl text-text-primary lg:text-5xl" style={{ fontFamily: "var(--font-dm-serif)" }}>
-            Meus Pedidos
+            {activeTab === "pedidos" ? "Meus Pedidos" : "Histórico de Locações"}
           </h1>
           <p className="mt-3 ds-body-lg max-w-2xl text-text-secondary">
-            Acompanhe cada etapa do seu pedido, edite rascunhos, envie para análise e controle o status completo da locação.
+            {activeTab === "pedidos"
+              ? "Gerencie suas solicitações de aluguel"
+              : "Contratos de locação realizados"}
           </p>
+
+          <div className="mt-6 inline-flex rounded-full bg-surface p-1.5 shadow-[0_2px_14px_rgba(26,77,168,0.08)]">
+            <Link
+              href="/pedidos"
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition ${activeTab === "pedidos"
+                ? "bg-(--primary-700) text-white"
+                : "text-text-secondary hover:text-text-primary"
+              }`}
+            >
+              Meus Pedidos
+            </Link>
+            <Link
+              href="/pedidos?tab=historico"
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition ${activeTab === "historico"
+                ? "bg-(--primary-700) text-white"
+                : "text-text-secondary hover:text-text-primary"
+              }`}
+            >
+              Histórico de Locações
+            </Link>
+          </div>
         </div>
       </div>
 
       <main className="mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:py-12">
-        <MeusPedidosClient />
+        {activeTab === "pedidos" ? <MeusPedidosClient /> : <HistoricoLocacoesClient />}
       </main>
     </div>
   )
