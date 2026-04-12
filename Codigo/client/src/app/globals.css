@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
@@ -89,6 +88,34 @@
   --radius-3xl: calc(var(--radius) * 2.2);
 
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-300: var(--primary-300);
+  --color-primary-400: var(--primary-400);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+  --color-primary-800: var(--primary-800);
+  --color-primary-900: var(--primary-900);
+
+  --color-neutral-0: var(--neutral-0);
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
+  --color-neutral-950: var(--neutral-950);
+
+  --color-accent-100: var(--accent-100);
+  --color-accent-300: var(--accent-300);
+  --color-accent-500: var(--accent-500);
+  --color-accent-700: var(--accent-700);
 }
 
 :root {
@@ -300,24 +327,25 @@
 
   .ds-display {
     font-family: var(--font-dm-serif);
-    font-size: clamp(3rem, 7vw, 5.5rem);
+    font-size: clamp(3.5rem, 8vw, 6rem);
     font-style: italic;
-    line-height: 0.95;
+    line-height: 0.9;
     letter-spacing: -0.05em;
   }
 
   .ds-h1 {
     font-family: var(--font-dm-serif);
-    font-size: clamp(2.5rem, 4vw, 3.75rem);
-    line-height: 1;
-    letter-spacing: -0.045em;
+    font-size: clamp(2.75rem, 5vw, 4.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
   }
 
   .ds-h2 {
-    font-size: clamp(1.75rem, 2.5vw, 2.25rem);
-    font-weight: 700;
+    font-family: var(--font-dm-serif);
+    font-size: clamp(2rem, 3vw, 2.75rem);
+    font-weight: 400;
     line-height: 1.1;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.035em;
   }
 
   .ds-h3 {
