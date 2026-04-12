@@ -27,3 +27,4 @@ Thumbs.db
 **/.env
 
 .github/
+node_modules
