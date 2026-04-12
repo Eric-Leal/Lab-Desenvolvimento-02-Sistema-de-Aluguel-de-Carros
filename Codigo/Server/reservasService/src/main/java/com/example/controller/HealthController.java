@@ -11,7 +11,7 @@ public class HealthController {
     @Secured(SecurityRule.IS_ANONYMOUS)
     @Get("/")
     public String index() {
-        return "rentalsService online";
+        return "reservasService online";
     }
 
     @Secured(SecurityRule.IS_ANONYMOUS)

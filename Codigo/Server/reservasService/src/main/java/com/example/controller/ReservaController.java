@@ -21,17 +21,6 @@ public class ReservaController {
         this.service = service;
     }
 
-    // ============ HEALTH CHECK ============
-
-    @Get("/")
-    public String index() {
-        return "reservasService online";
-    }
-
-    @Get("/ping")
-    public String ping() {
-        return "ok";
-    }
 
     // ============ VERIFICAÇÃO DE DISPONIBILIDADE (MS-C) ============
 
