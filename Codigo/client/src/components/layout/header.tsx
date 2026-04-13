@@ -4,6 +4,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Menu } from 'lucide-react'
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
+import { useAuth } from '@/components/providers/auth-provider'
+import { UserDropdown } from '@/components/layout/user-dropdown'
 
 const navItems = [
   { href: '/', label: 'Início' },
@@ -11,6 +13,8 @@ const navItems = [
 ]
 
 export function Header() {
+  const { isAuthenticated, isLoading } = useAuth()
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-surface/80 backdrop-blur-xl">
       <div className="ds-shell">
@@ -22,6 +26,7 @@ export function Header() {
               alt="CarFlow"
               width={200}
               height={64}
+              style={{ height: 'auto' }}
               className="h-16 w-auto dark:hidden"
               priority
             />
@@ -31,6 +36,7 @@ export function Header() {
               alt="CarFlow"
               width={200}
               height={64}
+              style={{ height: 'auto' }}
               className="hidden h-16 w-auto dark:block"
               priority
             />
@@ -59,21 +65,31 @@ export function Header() {
 
             <AnimatedThemeToggler className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-surface-2 text-text-secondary" />
 
-            <Link
-              href="/login"
-              className="hidden h-10 items-center justify-center rounded-md border border-border bg-surface-2 px-4 text-sm font-medium text-text-primary transition hover:bg-surface md:inline-flex"
-            >
-              Entrar
-            </Link>
-            <Link
-              href="/cadastro"
-              className="inline-flex h-10 items-center justify-center rounded-md bg-linear-to-br from-primary-700 to-primary-600 px-5 text-sm font-medium text-white shadow-lg shadow-primary-500/20 transition hover:brightness-110 active:scale-95"
-            >
-              Cadastrar
-            </Link>
+            {!isLoading && (
+              <>
+                {isAuthenticated ? (
+                  <UserDropdown />
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="hidden h-10 items-center justify-center rounded-md border border-border bg-surface-2 px-4 text-sm font-medium text-text-primary transition hover:bg-surface md:inline-flex"
+                    >
+                      Entrar
+                    </Link>
+                    <Link
+                      href="/cadastro"
+                      className="inline-flex h-10 items-center justify-center rounded-md bg-linear-to-br from-primary-700 to-primary-600 px-5 text-sm font-medium text-white shadow-lg shadow-primary-500/20 transition hover:brightness-110 active:scale-95"
+                    >
+                      Cadastrar
+                    </Link>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </nav>
       </div>
     </header>
   )
-}
+}

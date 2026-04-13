@@ -1,7 +1,8 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
 import { Shield, Timer, Sparkles } from 'lucide-react'
-import { VehicleCard } from '@/components/cards/vehicle-card'
 
 const benefits = [
   {
@@ -21,60 +22,10 @@ const benefits = [
   },
 ]
 
-const featuredCars = [
-  {
-    imageSrc: '/images/home/car-bmw-serie5-76e555.png',
-    imageAlt: 'BMW Serie 5',
-    year: '2024',
-    brand: 'BMW',
-    model: 'Serie 5',
-    price: 'R$ 450',
-    plate: 'ABC-1234',
-    seller: 'AutoPrime Locacoes',
-  },
-  {
-    imageSrc: '/images/home/car-mercedes-gle450-76e555.png',
-    imageAlt: 'Mercedes-Benz GLE 450',
-    year: '2024',
-    brand: 'Mercedes-Benz',
-    model: 'GLE 450',
-    price: 'R$ 520',
-    plate: 'DEF-5678',
-    seller: 'AutoPrime Locacoes',
-  },
-  {
-    imageSrc: '/images/home/car-porsche-911-3161e1.png',
-    imageAlt: 'Porsche 911 Carrera',
-    year: '2023',
-    brand: 'Porsche',
-    model: '911 Carrera',
-    price: 'R$ 890',
-    plate: 'GHI-9012',
-    seller: 'Elite Motors',
-  },
-  {
-    imageSrc: '/images/home/car-audi-a3-76e555.png',
-    imageAlt: 'Audi A3 Sportback',
-    year: '2024',
-    brand: 'Audi',
-    model: 'A3 Sportback',
-    price: 'R$ 280',
-    plate: 'JKL-3456',
-    seller: 'Elite Motors',
-  },
-  {
-    imageSrc: '/images/home/car-toyota-hilux-76e555.png',
-    imageAlt: 'Toyota Hilux SRX',
-    year: '2023',
-    brand: 'Toyota',
-    model: 'Hilux SRX',
-    price: 'R$ 350',
-    plate: 'MNO-7890',
-    seller: 'AutoPrime Locacoes',
-  },
-]
+import { useAuth } from '@/components/providers/auth-provider'
 
 export default function Home() {
+  const { isAuthenticated, isLoading } = useAuth()
   return (
     <main>
       <section className="relative overflow-hidden bg-linear-to-br from-primary-700 to-primary-600 px-6 py-20 sm:px-8 lg:px-0 lg:py-28">
@@ -104,12 +55,14 @@ export default function Home() {
               >
                 Ver Veículos
               </Link>
-              <Link
-                href="/cadastro"
-                className="inline-flex h-12 items-center justify-center rounded-md border border-white/30 bg-white/10 px-8 text-sm font-semibold text-white transition-all hover:bg-white/20 active:scale-95"
-              >
-                Criar Conta
-              </Link>
+              {!isLoading && !isAuthenticated && (
+                <Link
+                  href="/cadastro"
+                  className="inline-flex h-12 items-center justify-center rounded-md border border-white/30 bg-white/10 px-8 text-sm font-semibold text-white transition-all hover:bg-white/20 active:scale-95"
+                >
+                  Criar Conta
+                </Link>
+              )}
             </div>
           </div>
 
@@ -160,33 +113,33 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {featuredCars.map((vehicle) => (
-              <VehicleCard key={`${vehicle.plate}-${vehicle.model}`} {...vehicle} />
-            ))}
+          <div className="rounded-xl border border-border/60 bg-surface-2 p-8 text-center text-text-secondary">
+            Nenhum carro disponivel ainda.
           </div>
         </div>
       </section>
 
-      <section className="bg-surface px-6 py-16 text-center sm:px-8 lg:px-0">
-        <div className="ds-shell max-w-4xl space-y-4">
-          <h2 className="ds-h2 text-text-primary">
-            Pronto para sua próxima viagem?
-          </h2>
-          <p className="mx-auto max-w-2xl text-base text-text-secondary">
-            Cadastre-se agora e tenha acesso a nossa frota exclusiva de veiculos premium.
-          </p>
+      {!isLoading && !isAuthenticated && (
+        <section className="bg-surface px-6 py-16 text-center sm:px-8 lg:px-0">
+          <div className="ds-shell max-w-4xl space-y-4">
+            <h2 className="ds-h2 text-text-primary">
+              Pronto para sua próxima viagem?
+            </h2>
+            <p className="mx-auto max-w-2xl text-base text-text-secondary">
+              Cadastre-se agora e tenha acesso a nossa frota exclusiva de veiculos premium.
+            </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-6">
-            <Link
-              href="/cadastro"
-              className="inline-flex h-13 items-center justify-center rounded-md bg-linear-to-br from-primary-700 to-primary-600 px-10 text-sm font-semibold text-white shadow-xl shadow-primary-500/20 transition-all hover:brightness-110 active:scale-95"
-            >
-              Começar Agora
-            </Link>
+            <div className="flex flex-wrap items-center justify-center gap-4 pt-6">
+              <Link
+                href="/cadastro"
+                className="inline-flex h-13 items-center justify-center rounded-md bg-linear-to-br from-primary-700 to-primary-600 px-10 text-sm font-semibold text-white shadow-xl shadow-primary-500/20 transition-all hover:brightness-110 active:scale-95"
+              >
+                Começar Agora
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </main>
   )
 }
