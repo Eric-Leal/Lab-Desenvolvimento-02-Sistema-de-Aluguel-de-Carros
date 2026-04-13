@@ -30,9 +30,11 @@ public class ProxyFacadeService {
 
     /**
      * Resolve o path, removendo prefixos passados pelas variáveis das Controllers
-     * para mapear na raiz do microserviço. Cria uma nova requisição limpa para Proxy.
+     * para mapear na raiz do microserviço. Cria uma nova requisição limpa para
+     * Proxy.
      */
-    public Publisher<MutableHttpResponse<?>> forward(ProxyHttpClient targetClient, HttpRequest<?> originalRequest, @Nullable String path) {
+    public Publisher<MutableHttpResponse<?>> forward(ProxyHttpClient targetClient, HttpRequest<?> originalRequest,
+            @Nullable String path) {
         String tempPath = (path == null || path.isEmpty()) ? "/" : path;
 
         if (!tempPath.startsWith("/")) {
@@ -51,7 +53,8 @@ public class ProxyFacadeService {
     }
 
     /**
-     * Responde requisições de configuração OPTIONS (Preflight Security Test do Navegador).
+     * Responde requisições de configuração OPTIONS (Preflight Security Test do
+     * Navegador).
      */
     public Publisher<MutableHttpResponse<?>> respondOptionsPreflight(HttpRequest<?> request) {
         String origin = request.getHeaders().get("Origin");

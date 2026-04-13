@@ -428,7 +428,7 @@ export default function DesignPage() {
             <p className="ds-label text-text-brand">Regras rápidas</p>
             <ul className="mt-4 space-y-2 ds-body">
               <li>Use a variante <strong>light</strong> em fundos claros e a variante <strong>dark</strong> em fundos escuros.</li>
-              <li>Mantenha a área de respiro mínima (altura da letra "F").</li>
+              <li>Mantenha a área de respiro mínima (altura da letra &quot;F&quot;).</li>
               <li>Preferir SVG para novas exportações; estes PNGs são as versões finais aprovadas pelo design team.</li>
             </ul>
           </article>
