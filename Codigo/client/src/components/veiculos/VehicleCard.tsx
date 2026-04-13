@@ -38,7 +38,7 @@ export function VehicleCard({ vehicle, locadorNome }: VehicleCardProps) {
 
           {/* Badge ano — top-right, cor neutra que funciona em dark/light */}
           <div className="absolute right-3 top-3">
-            <span className="rounded-full bg-surface px-3 py-1 text-xs font-semibold text-neutral-0 backdrop-blur-sm">
+            <span className="rounded-full bg-surface px-3 py-1 text-xs font-semibold text-text-primary backdrop-blur-sm">
               {vehicle.ano}
             </span>
           </div>
