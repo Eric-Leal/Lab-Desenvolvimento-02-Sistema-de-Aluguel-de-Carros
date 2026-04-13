@@ -18,6 +18,7 @@ import io.micronaut.context.annotation.Executable;
 import jakarta.inject.Singleton;
 import lombok.AllArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,6 +26,8 @@ import java.util.stream.Collectors;
 @Singleton
 @AllArgsConstructor
 public class PedidoService {
+
+    private static final BigDecimal FINANCIAMENTO_PERCENTUAL = new BigDecimal("0.30");
 
     private final PedidoRepository pedidoRepository;
     private final PedidoMapper pedidoMapper;
@@ -73,7 +76,8 @@ public class PedidoService {
         try {
             ClientInfo clientInfo = usersServiceClient.getClient(pedido.getClienteId(), authorization);
             if (clientInfo != null && clientInfo.getRendimentoTotal() != null) {
-                boolean requer = clientInfo.getRendimentoTotal().compareTo(pedido.getValorTotal()) < 0;
+                BigDecimal limiteSemFinanciamento = clientInfo.getRendimentoTotal().multiply(FINANCIAMENTO_PERCENTUAL);
+                boolean requer = pedido.getValorTotal().compareTo(limiteSemFinanciamento) > 0;
                 pedido.setRequerFinanciamento(requer);
             }
         } catch (Exception e) {
@@ -93,6 +97,15 @@ public class PedidoService {
         }
         pedido.setStatusGeral(StatusGeral.CANCELADO.name());
         return pedidoMapper.toResponse(pedidoRepository.update(pedido));
+    }
+
+    @Executable
+    public void excluirRascunho(UUID id) {
+        Pedido pedido = getPedidoOrThrow(id);
+        if (!StatusGeral.RASCUNHO.name().equals(pedido.getStatusGeral())) {
+            throw new InvalidStatusTransitionException("Apenas pedidos em RASCUNHO podem ser excluídos.");
+        }
+        pedidoRepository.delete(pedido);
     }
 
     // --- Endpoints do Agente ---

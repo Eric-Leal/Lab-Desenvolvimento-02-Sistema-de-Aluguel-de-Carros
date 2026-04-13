@@ -3,7 +3,9 @@ package com.example.dto.automovel;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -24,7 +26,11 @@ public class AutomovelResponse {
 
     private UUID proprietarioAtualId;
 
+    private BigDecimal valorDiaria;
+
     private Boolean disponivel;
+
+    private List<AutomovelImagemResponse> imagens;
 
     private LocalDateTime criadoEm;
 
