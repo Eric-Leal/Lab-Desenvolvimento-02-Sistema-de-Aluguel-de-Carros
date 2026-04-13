@@ -21,9 +21,8 @@ type RawProfile = {
   email?: string
   profissao?: string
   documento?: string
-  ['endereço']?: Address
   endereco?: Address
-  ['endereÃ§o']?: Address
+  [key: string]: unknown
 }
 
 export type CurrentUserProfile = {
@@ -37,6 +36,29 @@ export type CurrentUserProfile = {
 
 type JwtPayload = {
   sub?: string
+}
+
+function normalizeKey(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z]/g, '')
+}
+
+function resolveAddress(data: RawProfile): Address {
+  if (data.endereco && typeof data.endereco === 'object') {
+    return data.endereco
+  }
+
+  for (const [key, value] of Object.entries(data)) {
+    const normalized = normalizeKey(key)
+    if ((normalized === 'endereco' || normalized.includes('ender')) && value && typeof value === 'object') {
+      return value as Address
+    }
+  }
+
+  return {}
 }
 
 export function useCurrentUser() {
@@ -66,7 +88,7 @@ export function useCurrentUser() {
       setError(null)
       const response = await api.get<RawProfile>(`/usersService/client/${userId}`)
       const data = response.data
-      const address = data['endereço'] || data.endereco || data['endereÃ§o'] || {}
+      const address = resolveAddress(data)
 
       setProfile({
         id: data.id,

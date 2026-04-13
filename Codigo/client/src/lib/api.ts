@@ -10,10 +10,17 @@ const api = axios.create({
   },
 })
 
+function getCookieValue(name: string): string | null {
+  if (typeof document === 'undefined') return null
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const match = document.cookie.match(new RegExp(`(?:^|; )${escapedName}=([^;]*)`))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 // Interceptador para adicionar o token em todas as requisições
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token')
+    const token = getCookieValue('carflow_token') || localStorage.getItem('token')
     if (token) {
       config.headers = config.headers || {}
       config.headers.Authorization = `Bearer ${token}`

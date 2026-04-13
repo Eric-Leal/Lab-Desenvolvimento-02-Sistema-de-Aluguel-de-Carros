@@ -7,6 +7,10 @@ import { FormField } from '@/components/forms/form-field'
 import { User, MapPin, Trash2, Edit2, Save, X, AlertOctagon, Loader2, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import api from '@/lib/api'
+import {
+  buildConfiguracoesUpdatePayload,
+  parseConfiguracoesForm,
+} from '@/validations/configuracoes.validation'
 
 export default function ConfiguracoesPage() {
   const { logout } = useAuth()
@@ -15,6 +19,7 @@ export default function ConfiguracoesPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -29,7 +34,7 @@ export default function ConfiguracoesPage() {
     estado: ''
   })
 
-  useEffect(() => {
+  const syncFormWithProfile = () => {
     if (!profile) return
     setFormData({
       nome: profile.nome || '',
@@ -43,26 +48,26 @@ export default function ConfiguracoesPage() {
       cidade: profile.endereco?.cidade || '',
       estado: profile.endereco?.estado || '',
     })
+  }
+
+  useEffect(() => {
+    syncFormWithProfile()
   }, [profile])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!userId) return
+    if (!userId || !isEditing) return
+
+    const validated = parseConfiguracoesForm(formData)
+
+    if (!validated.success) {
+      toast.error(validated.error.issues[0]?.message || 'Dados invalidos.')
+      return
+    }
+
     setIsSaving(true)
     try {
-      const payload = {
-        nome: formData.nome,
-        email: formData.email,
-        profissao: formData.profissao,
-        ['endereço']: {
-          cep: formData.cep.replace(/\D/g, ''),
-          logradouro: formData.logradouro,
-          numero: formData.numero,
-          bairro: formData.bairro,
-          cidade: formData.cidade,
-          estado: formData.estado
-        }
-      }
+      const payload = buildConfiguracoesUpdatePayload(validated.data)
       await api.patch(`/usersService/client/${userId}`, payload)
       toast.success('Configurações salvas!')
       setIsEditing(false)
@@ -78,14 +83,16 @@ export default function ConfiguracoesPage() {
   const handleDeleteAccount = async () => {
     if (!userId) return
     setIsDeleting(true)
+    setDeleteError(null)
     try {
       await api.delete(`/usersService/client/${userId}`)
       toast.success('Sua conta foi excluída com sucesso.')
       logout()
-    } catch (error) {
-      toast.error('Erro ao excluir conta.')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erro ao excluir conta.'
+      setDeleteError(message)
+      toast.error(message)
       setIsDeleting(false)
-      setShowDeleteModal(false)
     }
   }
 
@@ -120,7 +127,10 @@ export default function ConfiguracoesPage() {
             ) : (
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => {
+                    syncFormWithProfile()
+                    setIsEditing(false)
+                  }}
                   className="inline-flex h-12 items-center gap-2 rounded-md bg-white border border-border px-6 text-sm font-bold text-text-primary transition hover:bg-neutral-50 active:scale-95"
                 >
                   <X className="h-4 w-4" />
@@ -250,7 +260,10 @@ export default function ConfiguracoesPage() {
 
               <button
                 type="button"
-                onClick={() => setShowDeleteModal(true)}
+                onClick={() => {
+                  setDeleteError(null)
+                  setShowDeleteModal(true)
+                }}
                 className="inline-flex h-16 items-center justify-center gap-3 rounded-xl bg-red-600 px-12 text-base font-black text-white shadow-2xl shadow-red-500/40 transition hover:bg-red-700 active:scale-95"
               >
                 <Trash2 className="h-6 w-6" />
@@ -278,6 +291,11 @@ export default function ConfiguracoesPage() {
             </div>
 
             <div className="flex flex-col gap-4 pt-4">
+              {deleteError && (
+                <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                  {deleteError}
+                </p>
+              )}
               <button
                 onClick={handleDeleteAccount}
                 disabled={isDeleting}

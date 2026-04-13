@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import Cookies from 'js-cookie'
-import { useRouter } from 'next/navigation'
 
 type User = {
   email: string
@@ -24,15 +23,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
 
   useEffect(() => {
     const savedToken = Cookies.get('carflow_token')
     const savedUser = localStorage.getItem('carflow_user')
 
     if (savedToken && savedUser) {
-      setToken(savedToken)
-      setUser(JSON.parse(savedUser))
+      try {
+        setToken(savedToken)
+        setUser(JSON.parse(savedUser))
+      } catch {
+        Cookies.remove('carflow_token')
+        localStorage.removeItem('carflow_user')
+        localStorage.removeItem('token')
+      }
     }
     setIsLoading(false)
   }, [])
@@ -54,8 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     Cookies.remove('carflow_token')
     localStorage.removeItem('carflow_user')
     localStorage.removeItem('token')
-    // Força um recarregamento total para limpar cache do navegador e estados globais
-    window.location.href = '/'
+    // Forca recarregamento para limpar estados em memoria e dados cacheados.
+    if (typeof window !== 'undefined') {
+      window.location.replace('/')
+    }
   }
 
   return (
