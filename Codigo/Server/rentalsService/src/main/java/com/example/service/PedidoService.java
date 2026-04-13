@@ -16,7 +16,6 @@ import com.example.model.Pedido;
 import com.example.repository.PedidoRepository;
 import io.micronaut.context.annotation.Executable;
 import jakarta.inject.Singleton;
-import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,15 +23,24 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Singleton
-@AllArgsConstructor
 public class PedidoService {
 
     private static final BigDecimal FINANCIAMENTO_PERCENTUAL = new BigDecimal("0.30");
 
     private final PedidoRepository pedidoRepository;
-    private final PedidoMapper pedidoMapper;
     private final VehiclesServiceClient vehiclesServiceClient;
     private final UsersServiceClient usersServiceClient;
+    private final PedidoMapper pedidoMapper = PedidoMapper.INSTANCE;
+
+    public PedidoService(
+        PedidoRepository pedidoRepository,
+        VehiclesServiceClient vehiclesServiceClient,
+        UsersServiceClient usersServiceClient
+    ) {
+        this.pedidoRepository = pedidoRepository;
+        this.vehiclesServiceClient = vehiclesServiceClient;
+        this.usersServiceClient = usersServiceClient;
+    }
 
     @Executable
     public PedidoResponse create(CreatePedidoRequest request) {

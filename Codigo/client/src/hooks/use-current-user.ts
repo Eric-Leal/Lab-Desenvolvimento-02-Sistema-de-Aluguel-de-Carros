@@ -6,6 +6,7 @@ import api from '@/lib/api'
 import { useAuth } from '@/components/providers/auth-provider'
 
 type UserRole = 'CLIENT' | 'AGENT'
+export const USER_PROFILE_UPDATED_EVENT = 'carflow:user-updated'
 
 type Address = {
   cep?: string
@@ -21,6 +22,7 @@ type RawProfile = {
   id: string
   nome?: string
   email?: string
+  imageUrl?: string
   profissao?: string
   documento?: string
   rendimentoTotal?: number
@@ -32,6 +34,7 @@ export type CurrentUserProfile = {
   id: string
   nome: string
   email: string
+  imageUrl: string
   profissao: string
   documento: string
   rendimentoTotal?: number
@@ -144,6 +147,7 @@ export function useCurrentUser() {
         id: data.id,
         nome: data.nome || '',
         email: data.email || '',
+        imageUrl: data.imageUrl || '',
         profissao: data.profissao || '',
         documento: data.documento || '',
         rendimentoTotal: typeof data.rendimentoTotal === 'number' ? data.rendimentoTotal : undefined,
@@ -159,6 +163,17 @@ export function useCurrentUser() {
 
   useEffect(() => {
     void refresh()
+  }, [refresh])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleUserUpdated = () => {
+      void refresh()
+    }
+
+    window.addEventListener(USER_PROFILE_UPDATED_EVENT, handleUserUpdated)
+    return () => window.removeEventListener(USER_PROFILE_UPDATED_EVENT, handleUserUpdated)
   }, [refresh])
 
   return {

@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '@/components/providers/auth-provider'
-import { useCurrentUser } from '@/hooks/use-current-user'
+import { USER_PROFILE_UPDATED_EVENT, useCurrentUser } from '@/hooks/use-current-user'
 import { FormField } from '@/components/forms/form-field'
-import { User, MapPin, Trash2, Edit2, Save, X, AlertOctagon, Loader2, AlertTriangle } from 'lucide-react'
+import { User, MapPin, Trash2, Edit2, Save, X, AlertOctagon, Loader2, AlertTriangle, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import api from '@/lib/api'
 import {
@@ -15,11 +15,14 @@ import {
 export default function ConfiguracoesPage() {
   const { logout, user } = useAuth()
   const { userId, profile, loading, refresh } = useCurrentUser()
+  const isClientUser = user?.role === 'CLIENT'
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
+  const [profileImagePreview, setProfileImagePreview] = useState<string>('')
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -39,7 +42,7 @@ export default function ConfiguracoesPage() {
     setFormData({
       nome: profile.nome || '',
       email: profile.email || '',
-      profissao: profile.profissao || '',
+      profissao: isClientUser ? profile.profissao || '' : '',
       documento: profile.documento || '',
       cep: profile.endereco?.cep || '',
       logradouro: profile.endereco?.logradouro || '',
@@ -48,21 +51,64 @@ export default function ConfiguracoesPage() {
       cidade: profile.endereco?.cidade || '',
       estado: profile.endereco?.estado || '',
     })
+    setProfileImageFile(null)
+    setProfileImagePreview(profile.imageUrl || '')
   }
 
   useEffect(() => {
     syncFormWithProfile()
-  }, [profile])
+  }, [isClientUser, profile])
+
+  useEffect(() => {
+    return () => {
+      if (profileImagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(profileImagePreview)
+      }
+    }
+  }, [profileImagePreview])
 
   const profileEndpoint = user?.role === 'AGENT'
     ? `/usersService/agent/${userId}`
     : `/usersService/client/${userId}`
 
+  const toBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(String(reader.result))
+      reader.onerror = () => reject(new Error('Falha ao processar imagem'))
+    })
+
+  const handleProfileImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Selecione um arquivo de imagem válido.')
+      return
+    }
+
+    if (profileImagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(profileImagePreview)
+    }
+
+    setProfileImageFile(file)
+    setProfileImagePreview(URL.createObjectURL(file))
+  }
+
+  const clearImageSelection = () => {
+    if (profileImagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(profileImagePreview)
+    }
+    setProfileImageFile(null)
+    setProfileImagePreview(profile?.imageUrl || '')
+  }
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!userId || !isEditing) return
 
-    const validated = parseConfiguracoesForm(formData)
+    const validated = parseConfiguracoesForm(formData, { includeProfissao: isClientUser })
 
     if (!validated.success) {
       toast.error(validated.error.issues[0]?.message || 'Dados invalidos.')
@@ -71,11 +117,18 @@ export default function ConfiguracoesPage() {
 
     setIsSaving(true)
     try {
-      const payload = buildConfiguracoesUpdatePayload(validated.data)
+      const payload = buildConfiguracoesUpdatePayload(validated.data, { includeProfissao: isClientUser })
+      if (profileImageFile) {
+        payload.imageBase64 = await toBase64(profileImageFile)
+      }
+
       await api.patch(profileEndpoint, payload)
       toast.success('Configurações salvas!')
       setIsEditing(false)
       await refresh()
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(USER_PROFILE_UPDATED_EVENT))
+      }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Erro ao salvar.'
       toast.error(message)
@@ -168,6 +221,43 @@ export default function ConfiguracoesPage() {
                   <h2 className="text-2xl font-bold text-text-primary uppercase tracking-tight">Dados Pessoais</h2>
                 </div>
 
+                <div className="mb-10 rounded-xl border border-dashed border-border-strong bg-surface-2 p-4">
+                  <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-border bg-surface">
+                        {profileImagePreview ? (
+                          <img src={profileImagePreview} alt="Foto de perfil" className="h-full w-full object-cover" />
+                        ) : (
+                          <User className="h-8 w-8 text-text-secondary" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-text-primary">Foto de perfil</p>
+                      </div>
+                    </div>
+
+                    {isEditing && (
+                      <div className="flex items-center gap-2">
+                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700">
+                          <Upload className="h-4 w-4" />
+                          Alterar foto
+                          <input type="file" accept="image/*" className="hidden" onChange={handleProfileImageChange} />
+                        </label>
+                        {profileImageFile && (
+                          <button
+                            type="button"
+                            onClick={clearImageSelection}
+                            className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-text-primary transition hover:bg-surface"
+                          >
+                            <X className="h-4 w-4" />
+                            Desfazer
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
                   <FormField
                     label="Nome Completo"
@@ -182,17 +272,22 @@ export default function ConfiguracoesPage() {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     disabled={!isEditing}
                   />
-                  <FormField
-                    label="Profissão"
-                    value={formData.profissao}
-                    onChange={(e) => setFormData({ ...formData, profissao: e.target.value })}
-                    disabled={!isEditing}
-                  />
-                  <FormField
-                    label="CPF / CNPJ"
-                    value={formData.documento}
-                    disabled
-                  />
+                  <div className={isClientUser ? '' : 'md:col-span-2'}>
+                    <FormField
+                      label="CPF / CNPJ"
+                      value={formData.documento}
+                      onChange={(e) => setFormData({ ...formData, documento: e.target.value })}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  {isClientUser && (
+                    <FormField
+                      label="Profissão"
+                      value={formData.profissao}
+                      onChange={(e) => setFormData({ ...formData, profissao: e.target.value })}
+                      disabled={!isEditing}
+                    />
+                  )}
                 </div>
               </div>
 

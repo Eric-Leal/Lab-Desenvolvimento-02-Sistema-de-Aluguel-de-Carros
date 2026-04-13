@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Upload, X } from 'lucide-react'
 import { AuthShell } from '@/components/forms/auth-shell'
 import { FormField } from '@/components/forms/form-field'
 import { useAuth } from '@/components/providers/auth-provider'
@@ -27,6 +28,8 @@ export function CadastroForm({ initialType = 'cliente' }: { initialType?: Accoun
   const [accountType, setAccountType] = useState<AccountType>(initialType)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const { login } = useAuth()
   const router = useRouter()
 
@@ -60,6 +63,40 @@ export function CadastroForm({ initialType = 'cliente' }: { initialType?: Accoun
     }
   }
 
+  const toBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(String(reader.result))
+      reader.onerror = () => reject(new Error('Falha ao processar imagem'))
+    })
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setError('Selecione um arquivo de imagem válido.')
+      return
+    }
+
+    setError(null)
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const clearSelectedImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview)
+    setImagePreview(null)
+    setImageFile(null)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview)
+    }
+  }, [imagePreview])
+
   // ViaCEP Integration
   const handleCEPBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const cep = e.target.value.replace(/\D/g, '')
@@ -83,11 +120,16 @@ export function CadastroForm({ initialType = 'cliente' }: { initialType?: Accoun
     setIsLoading(true)
 
     try {
+      if (!imageFile) {
+        throw new Error('Adicione uma imagem de perfil para concluir o cadastro.')
+      }
+
+      const imageBase64 = await toBase64(imageFile)
       const { endpoint, body } = buildCadastroRequest(data, accountType)
       const normalizedEmail = data.email.trim().toLowerCase()
       const normalizedPassword = data.password.trim()
 
-      await api.post(endpoint, body)
+      await api.post(endpoint, { ...body, imageBase64 })
 
       const loginResponse = await api.post<{ accessToken: string; email: string }>('/usersService/auth/login', {
         email: normalizedEmail,
@@ -139,6 +181,46 @@ export function CadastroForm({ initialType = 'cliente' }: { initialType?: Accoun
                 </button>
               )
             })}
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl">Imagem de Perfil</h2>
+
+          <div className="rounded-xl border border-dashed border-border-strong bg-surface-2 p-4">
+            <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-border bg-surface">
+                  {imagePreview ? (
+                    <img src={imagePreview} alt="Prévia da imagem" className="h-full w-full object-cover" />
+                  ) : (
+                    <Upload className="h-6 w-6 text-text-secondary" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">Foto do usuário</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700">
+                  <Upload className="h-4 w-4" />
+                  Selecionar
+                  <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                </label>
+
+                {imagePreview && (
+                  <button
+                    type="button"
+                    onClick={clearSelectedImage}
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-text-primary transition hover:bg-surface"
+                  >
+                    <X className="h-4 w-4" />
+                    Remover
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </section>
 

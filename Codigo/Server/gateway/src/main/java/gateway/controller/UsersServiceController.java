@@ -40,6 +40,11 @@ public class UsersServiceController {
         return proxyFacade.forward(usersServiceClient, request, path);
     }
 
+    @Patch("{path:.*}")
+    public Publisher<MutableHttpResponse<?>> proxyPatch(HttpRequest<?> request, @Nullable String path) {
+        return proxyFacade.forward(usersServiceClient, request, path);
+    }
+
     @Options("{path:.*}")
     public Publisher<MutableHttpResponse<?>> proxyOptions(HttpRequest<?> request, @Nullable String path) {
         return proxyFacade.respondOptionsPreflight(request);

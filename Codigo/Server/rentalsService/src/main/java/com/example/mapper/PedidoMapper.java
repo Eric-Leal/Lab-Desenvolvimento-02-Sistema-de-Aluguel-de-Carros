@@ -8,6 +8,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
@@ -16,6 +17,8 @@ import java.util.List;
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
 )
 public interface PedidoMapper {
+
+    PedidoMapper INSTANCE = Mappers.getMapper(PedidoMapper.class);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "statusLocador", ignore = true)

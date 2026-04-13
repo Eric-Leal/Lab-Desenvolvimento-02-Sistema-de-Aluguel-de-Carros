@@ -25,6 +25,7 @@ export const cadastroSchema = z
     estado: z.string().min(2, 'Estado invalido').max(2, 'Use a sigla (ex: SP)'),
     cep: z.string().min(8, 'CEP incompleto'),
     empregos: z.array(empregoSchema).max(3).optional(),
+    imageBase64: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'As senhas nao coincidem',
@@ -72,6 +73,7 @@ export function buildCadastroRequest(data: CadastroFormData, accountType: Accoun
         email: commonData.email,
         password: commonData.password,
         documento: commonData.documento,
+        imageBase64: data.imageBase64,
         endereco: commonData.endereco,
         ['endereço']: commonData.enderecoLegacy,
         rg: data.rg?.replace(/\D/g, ''),
@@ -94,6 +96,7 @@ export function buildCadastroRequest(data: CadastroFormData, accountType: Accoun
       email: commonData.email,
       password: commonData.password,
       documento: commonData.documento,
+      imageBase64: data.imageBase64,
       endereco: commonData.endereco,
       ['endereço']: commonData.enderecoLegacy,
       tipo: accountType.toUpperCase(),
