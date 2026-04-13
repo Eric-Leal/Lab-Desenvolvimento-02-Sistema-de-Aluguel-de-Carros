@@ -15,6 +15,8 @@ import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Put;
 import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.security.annotation.Secured;
+import io.micronaut.security.rules.SecurityRule;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Controller("/pedidos")
+@Secured(SecurityRule.IS_AUTHENTICATED)
 @AllArgsConstructor
 public class PedidoController {
 

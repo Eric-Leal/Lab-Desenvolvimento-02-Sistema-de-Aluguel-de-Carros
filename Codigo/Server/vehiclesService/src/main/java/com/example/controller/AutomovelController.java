@@ -19,6 +19,8 @@ import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Put;
 import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.http.multipart.CompletedFileUpload;
+import io.micronaut.security.annotation.Secured;
+import io.micronaut.security.rules.SecurityRule;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
@@ -34,6 +36,7 @@ public class AutomovelController {
     private final AutomovelService automovelService;
 
     @Post
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     public HttpResponse<AutomovelResponse> create(@Body @Valid CreateAutomovelRequest request) {
         return HttpResponse.created(automovelService.create(request));
     }
@@ -59,6 +62,7 @@ public class AutomovelController {
     }
 
     @Put("/{matricula}")
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     public HttpResponse<AutomovelResponse> update(
             @PathVariable Long matricula,
             @Body @Valid UpdateAutomovelRequest request) {
@@ -66,12 +70,14 @@ public class AutomovelController {
     }
 
     @Delete("/{matricula}")
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     public HttpResponse<Void> delete(@PathVariable Long matricula) {
         automovelService.delete(matricula);
         return HttpResponse.noContent();
     }
 
     @Patch("/{matricula}/proprietario")
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     public HttpResponse<AutomovelResponse> updateProprietario(
             @PathVariable Long matricula,
             @Body @Valid UpdateProprietarioRequest request) {
@@ -89,6 +95,7 @@ public class AutomovelController {
      */
     @Post(value = "/{matricula}/imagens", consumes = MediaType.MULTIPART_FORM_DATA)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     public HttpResponse<AutomovelResponse> addImageMultipart(
             @PathVariable Long matricula,
             @Part("file") CompletedFileUpload file) throws IOException {
@@ -100,6 +107,7 @@ public class AutomovelController {
      * Remove uma imagem do veículo (mínimo 1 imagem deve permanecer).
      */
     @Delete("/{matricula}/imagens/{imageId}")
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     public HttpResponse<AutomovelResponse> removeImage(
             @PathVariable Long matricula,
             @PathVariable UUID imageId) {

@@ -13,7 +13,7 @@ import {
 } from '@/validations/configuracoes.validation'
 
 export default function ConfiguracoesPage() {
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const { userId, profile, loading, refresh } = useCurrentUser()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -54,6 +54,10 @@ export default function ConfiguracoesPage() {
     syncFormWithProfile()
   }, [profile])
 
+  const profileEndpoint = user?.role === 'AGENT'
+    ? `/usersService/agent/${userId}`
+    : `/usersService/client/${userId}`
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!userId || !isEditing) return
@@ -68,7 +72,7 @@ export default function ConfiguracoesPage() {
     setIsSaving(true)
     try {
       const payload = buildConfiguracoesUpdatePayload(validated.data)
-      await api.patch(`/usersService/client/${userId}`, payload)
+      await api.patch(profileEndpoint, payload)
       toast.success('Configurações salvas!')
       setIsEditing(false)
       await refresh()
@@ -85,7 +89,7 @@ export default function ConfiguracoesPage() {
     setIsDeleting(true)
     setDeleteError(null)
     try {
-      await api.delete(`/usersService/client/${userId}`)
+      await api.delete(profileEndpoint)
       toast.success('Sua conta foi excluída com sucesso.')
       logout()
     } catch (error: unknown) {
@@ -131,7 +135,7 @@ export default function ConfiguracoesPage() {
                     syncFormWithProfile()
                     setIsEditing(false)
                   }}
-                  className="inline-flex h-12 items-center gap-2 rounded-md bg-white border border-border px-6 text-sm font-bold text-text-primary transition hover:bg-neutral-50 active:scale-95"
+                  className="inline-flex h-12 items-center gap-2 rounded-md border border-border bg-surface px-6 text-sm font-bold text-text-primary transition hover:bg-surface-2 active:scale-95"
                 >
                   <X className="h-4 w-4" />
                   Cancelar
@@ -152,13 +156,13 @@ export default function ConfiguracoesPage() {
 
         <div className="grid gap-10">
           {/* Card Principal de Formulário */}
-          <div className="rounded-2xl border border-border/80 bg-white shadow-2xl shadow-black/5 overflow-hidden">
+          <div className="overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-2xl shadow-black/10 dark:shadow-black/30">
             <form id="settings-form" onSubmit={handleSave}>
               
               {/* SEÇÃO: DADOS PESSOAIS (GRID 2 COLUNAS) */}
               <div className="p-10 sm:p-12">
                 <div className="mb-12 flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300">
                     <User className="h-6 w-6" />
                   </div>
                   <h2 className="text-2xl font-bold text-text-primary uppercase tracking-tight">Dados Pessoais</h2>
@@ -197,7 +201,7 @@ export default function ConfiguracoesPage() {
               {/* SEÇÃO: ENDEREÇO (GRID 2 COLUNAS IGUAL AO CADASTRO) */}
               <div className="p-10 sm:p-12">
                 <div className="mb-12 flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/35 dark:text-emerald-300">
                     <MapPin className="h-6 w-6" />
                   </div>
                   <h2 className="text-2xl font-bold text-text-primary uppercase tracking-tight">Endereço Residencial</h2>
@@ -244,14 +248,14 @@ export default function ConfiguracoesPage() {
           </div>
 
           {/* BOTÃO EXCLUIR - SEÇÃO ULTRA DESTACADA */}
-          <div className="rounded-2xl border-2 border-dashed border-red-200 bg-red-50/40 p-10 sm:p-12">
+          <div className="rounded-2xl border-2 border-dashed border-red-300/70 bg-red-50/40 p-10 sm:p-12 dark:border-red-900/60 dark:bg-red-950/25">
             <div className="flex flex-col md:flex-row items-center justify-between gap-10">
               <div className="flex items-start gap-6">
-                <div className="mt-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+                <div className="mt-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-300">
                   <AlertOctagon className="h-8 w-8" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-3xl font-black text-red-700">Atenção!</h2>
+                  <h2 className="text-3xl font-black text-red-700 dark:text-red-300">Atenção!</h2>
                   <p className="text-text-secondary font-medium text-lg max-w-md">
                     Ao excluir sua conta, todos os seus dados serão deletados permanentemente. Esta ação não pode ser desfeita.
                   </p>
@@ -277,9 +281,9 @@ export default function ConfiguracoesPage() {
       {/* MODAL DE CONFIRMAÇÃO REAL */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white rounded-[2rem] shadow-2xl p-10 space-y-8 animate-in zoom-in-95 duration-200 text-center">
+          <div className="w-full max-w-md rounded-[2rem] border border-border bg-surface p-10 text-center shadow-2xl space-y-8 animate-in zoom-in-95 duration-200">
             <div className="flex flex-col items-center space-y-6">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-300">
                  <AlertTriangle className="h-12 w-12" />
               </div>
               <div className="space-y-3">
@@ -292,7 +296,7 @@ export default function ConfiguracoesPage() {
 
             <div className="flex flex-col gap-4 pt-4">
               {deleteError && (
-                <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                <p className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300">
                   {deleteError}
                 </p>
               )}
@@ -306,7 +310,7 @@ export default function ConfiguracoesPage() {
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="flex h-14 w-full items-center justify-center rounded-xl bg-surface-elevated text-base font-bold text-text-primary hover:bg-border transition active:scale-95"
+                className="flex h-14 w-full items-center justify-center rounded-xl border border-border bg-surface-2 text-base font-bold text-text-primary transition hover:bg-surface active:scale-95"
               >
                 Não, manter minha conta
               </button>

@@ -1,8 +1,6 @@
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import { notFound } from "next/navigation"
-import { Navbar } from "@/components/navbar/NavbarV1"
-import { DevClientSelector } from "@/components/dev/DevClientSelector"
 import { VehicleDetailGallery } from "@/components/veiculos/VehicleDetailGallery"
 import { VehicleDetailInfo } from "@/components/veiculos/VehicleDetailInfo"
 import { vehiclesService } from "@/services/vehicles.service"
@@ -36,9 +34,6 @@ export default async function VeiculoDetalhePage({ params }: VeiculoDetalhePageP
 
   return (
     <div className="min-h-screen bg-page">
-      <DevClientSelector />
-      <Navbar />
-
       <main className="mx-auto max-w-7xl px-6 py-12 lg:px-10 lg:py-16">
         <Link
           href="/veiculos"

@@ -8,6 +8,7 @@ import {
   Clock,
   XCircle,
   AlertTriangle,
+  Loader2,
   Car,
   CalendarDays,
   DollarSign,
@@ -17,12 +18,87 @@ import {
 } from "lucide-react"
 import type { PedidoResponse } from "@/services/rentals.service"
 import type { Automovel } from "@/types/vehicle"
-import { useDevSession } from "@/store/use-dev-session"
+import { useCurrentUser } from "@/hooks/use-current-user"
+import { rentalsService } from "@/services/rentals.service"
+import { vehiclesService } from "@/services/vehicles.service"
+
+interface PedidoDetailLoaderProps {
+  pedidoId: string
+  isNew: boolean
+}
 
 interface PedidoDetailClientProps {
   pedido: PedidoResponse
   vehicle: Automovel | null
   isNew: boolean
+}
+
+export function PedidoDetailLoader({ pedidoId, isNew }: PedidoDetailLoaderProps) {
+  const [pedido, setPedido] = useState<PedidoResponse | null>(null)
+  const [vehicle, setVehicle] = useState<Automovel | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const pedidoData = await rentalsService.buscarPorId(pedidoId)
+        if (cancelled) return
+
+        setPedido(pedidoData)
+
+        try {
+          const vehicleData = await vehiclesService.buscarPorMatricula(pedidoData.automovelMatricula)
+          if (!cancelled) setVehicle(vehicleData)
+        } catch {
+          if (!cancelled) setVehicle(null)
+        }
+      } catch {
+        if (!cancelled) {
+          setPedido(null)
+          setVehicle(null)
+          setError("Nao foi possivel carregar este pedido. Ele pode nao existir ou voce nao tem permissao de acesso.")
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    void load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [pedidoId])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center rounded-xl border border-border bg-surface p-10">
+        <Loader2 size={22} className="animate-spin text-text-secondary" />
+      </div>
+    )
+  }
+
+  if (!pedido) {
+    return (
+      <div className="space-y-4 rounded-xl border border-border bg-surface p-6">
+        <p className="text-sm text-text-secondary">{error ?? "Pedido nao encontrado."}</p>
+        <Link
+          href="/pedidos"
+          className="inline-flex rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-medium text-text-primary transition hover:bg-surface"
+        >
+          Voltar para pedidos
+        </Link>
+      </div>
+    )
+  }
+
+  return <PedidoDetailClient pedido={pedido} vehicle={vehicle} isNew={isNew} />
 }
 
 function formatBRL(value: number) {
@@ -66,7 +142,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export function PedidoDetailClient({ pedido, vehicle, isNew }: PedidoDetailClientProps) {
   const [showSuccess, setShowSuccess] = useState(isNew)
-  const currentClient = useDevSession((state) => state.currentClient)
+  const { profile: currentClient } = useCurrentUser()
 
   useEffect(() => {
     if (isNew) {

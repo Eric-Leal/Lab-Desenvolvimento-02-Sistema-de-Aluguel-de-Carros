@@ -17,8 +17,28 @@ function getCookieValue(name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null
 }
 
+function shouldSkipAuthHeader(url?: string, method?: string): boolean {
+  if (!url) return false
+  const path = url.toLowerCase()
+  const httpMethod = (method || 'get').toLowerCase()
+
+  if (httpMethod === 'post' && (path.includes('/usersservice/client') || path.includes('/usersservice/agent'))) {
+    return true
+  }
+
+  if (httpMethod === 'post' && path.includes('/usersservice/auth/login')) {
+    return true
+  }
+
+  return false
+}
+
 // Interceptador para adicionar o token em todas as requisições
 api.interceptors.request.use((config) => {
+  if (shouldSkipAuthHeader(config.url, config.method)) {
+    return config
+  }
+
   if (typeof window !== 'undefined') {
     const token = getCookieValue('carflow_token') || localStorage.getItem('token')
     if (token) {

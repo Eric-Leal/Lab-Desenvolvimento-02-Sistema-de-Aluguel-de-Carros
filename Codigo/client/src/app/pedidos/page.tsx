@@ -1,6 +1,4 @@
 import Link from "next/link"
-import { Navbar } from "@/components/navbar/NavbarV1"
-import { DevClientSelector } from "@/components/dev/DevClientSelector"
 import { MeusPedidosClient } from "@/components/pedidos/MeusPedidosClient"
 import { HistoricoLocacoesClient } from "@/components/pedidos/HistoricoLocacoesClient"
 
@@ -19,9 +17,6 @@ export default async function MeusPedidosPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-page">
-      <DevClientSelector />
-      <Navbar />
-
       <div className="relative overflow-hidden border-b border-border">
         <div
           className="absolute inset-0 pointer-events-none"

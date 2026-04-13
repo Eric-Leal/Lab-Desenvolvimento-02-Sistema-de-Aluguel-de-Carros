@@ -30,8 +30,9 @@ public class ClientService {
 
     private final ClientRepository clientRepository;
     private final EmpregoRepository empregoRepository;
-    private final ClientMapper clientMapper;
     private final CloudinaryService cloudinaryService;
+
+    private final ClientMapper clientMapper = ClientMapper.INSTANCE;
 
     @Executable
     public ClientResponse create(CreateClientRequest request) {

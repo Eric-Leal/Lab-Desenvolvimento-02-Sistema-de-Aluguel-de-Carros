@@ -2,15 +2,21 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { Car, Loader2, Pencil, Plus, SearchX, Trash2 } from "lucide-react"
 import type { Automovel } from "@/types/vehicle"
 import { vehiclesService } from "@/services/vehicles.service"
-import { useDevAgentSession } from "@/store/use-dev-agent-session"
+import { usersService } from "@/services/users.service"
+import { useAuth } from "@/components/providers/auth-provider"
+import { useAuthUserId } from "@/hooks/use-auth-user-id"
 import { VehicleFormModal } from "@/components/veiculos/gestao/VehicleFormModal"
 import { VehicleDeleteModal } from "@/components/veiculos/gestao/VehicleDeleteModal"
 
 export function VehicleManagementClient() {
-  const { currentAgent } = useDevAgentSession()
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth()
+  const isAgent = user?.role === "AGENT"
+  const currentAgentId = useAuthUserId()
+  const [currentAgentName, setCurrentAgentName] = useState("")
 
   const [vehicles, setVehicles] = useState<Automovel[]>([])
   const [loading, setLoading] = useState(true)
@@ -25,7 +31,7 @@ export function VehicleManagementClient() {
   const [deleteTarget, setDeleteTarget] = useState<Automovel | null>(null)
 
   const loadVehicles = useCallback(async () => {
-    if (!currentAgent) {
+    if (!currentAgentId || !isAgent) {
       setVehicles([])
       setLoading(false)
       return
@@ -34,7 +40,11 @@ export function VehicleManagementClient() {
     setLoading(true)
     setError(null)
     try {
-      const data = await vehiclesService.listarMeus(currentAgent.id)
+      const [agent, data] = await Promise.all([
+        usersService.buscarAgent(currentAgentId).catch(() => null),
+        vehiclesService.listarMeus(currentAgentId),
+      ])
+      setCurrentAgentName(agent?.nome ?? "Locador")
       const ordered = data.slice().sort((a, b) => b.matricula - a.matricula)
       setVehicles(ordered)
     } catch (err) {
@@ -42,7 +52,7 @@ export function VehicleManagementClient() {
     } finally {
       setLoading(false)
     }
-  }, [currentAgent])
+  }, [currentAgentId, isAgent])
 
   useEffect(() => {
     void loadVehicles()
@@ -91,12 +101,32 @@ export function VehicleManagementClient() {
     }
   }
 
-  if (!currentAgent) {
+  if (authLoading) {
+    return null
+  }
+
+  if (!isAuthenticated) {
     return (
       <div className="rounded-xl border border-blue-300/60 bg-blue-50 p-5 text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
-        Selecione um locador no modo de desenvolvimento para gerenciar os veículos.
+        <p className="font-semibold">Faça login para acessar a gestão de veículos.</p>
+        <Link href="/login" className="mt-3 inline-flex rounded-md border border-blue-300 bg-white px-4 py-2 text-sm font-medium text-blue-800">
+          Ir para login
+        </Link>
       </div>
     )
+  }
+
+  if (!isAgent) {
+    return (
+      <div className="rounded-xl border border-blue-300/60 bg-blue-50 p-5 text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
+        <p className="font-semibold">A gestão de veículos é exclusiva para contas de locador.</p>
+        <p className="mt-1 text-sm">Sua conta atual não possui esse tipo de acesso.</p>
+      </div>
+    )
+  }
+
+  if (!currentAgentId) {
+    return null
   }
 
   return (
@@ -122,10 +152,10 @@ export function VehicleManagementClient() {
 
       <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface p-4">
         <div>
-          <p className="text-lg font-semibold text-text-primary">{currentAgent.nome}</p>
+          <p className="text-lg font-semibold text-text-primary">{currentAgentName}</p>
           <p className="text-md">Gerencie sua frota, valores e disponibilidade.</p>
         </div>
-        <button onClick={openCreate} className="inline-flex items-center gap-2 rounded-lg bg-(--primary-700) px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-(--primary-800)">
+        <button onClick={openCreate} className="inline-flex items-center gap-2 rounded-lg bg-primary-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-800">
           <Plus size={16} /> Cadastrar novo veículo
         </button>
       </section>
@@ -208,7 +238,7 @@ export function VehicleManagementClient() {
         open={formOpen}
         mode={formMode}
         vehicle={selectedVehicle}
-        locadorId={currentAgent.id}
+        locadorId={currentAgentId}
         onClose={() => setFormOpen(false)}
         onSaved={loadVehicles}
       />

@@ -19,7 +19,6 @@ import io.micronaut.context.annotation.Executable;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.multipart.CompletedFileUpload;
 import jakarta.inject.Singleton;
-import lombok.AllArgsConstructor;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -30,15 +29,24 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Singleton
-@AllArgsConstructor
 public class AutomovelService {
 
     private static final int MAX_IMAGENS = 3;
 
     private final AutomovelRepository automovelRepository;
     private final AutomovelImagemRepository automovelImagemRepository;
-    private final AutomovelMapper automovelMapper;
     private final CloudinaryService cloudinaryService;
+    private final AutomovelMapper automovelMapper = AutomovelMapper.INSTANCE;
+
+    public AutomovelService(
+        AutomovelRepository automovelRepository,
+        AutomovelImagemRepository automovelImagemRepository,
+        CloudinaryService cloudinaryService
+    ) {
+        this.automovelRepository = automovelRepository;
+        this.automovelImagemRepository = automovelImagemRepository;
+        this.cloudinaryService = cloudinaryService;
+    }
 
     // -------------------------------------------------------------------------
     // CRUD principal

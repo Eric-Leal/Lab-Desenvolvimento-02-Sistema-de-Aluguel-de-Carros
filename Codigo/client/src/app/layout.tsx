@@ -8,11 +8,12 @@ import './globals.css'
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans', preload: false })
 
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
   subsets: ['latin'],
+  preload: false,
 })
 
 const dmSerifDisplay = DM_Serif_Display({
@@ -20,6 +21,7 @@ const dmSerifDisplay = DM_Serif_Display({
   subsets: ['latin'],
   weight: '400',
   style: ['normal', 'italic'],
+  preload: false,
 })
 
 export const metadata: Metadata = {
@@ -43,6 +45,7 @@ export default function RootLayout({
     <html
       lang="pt-BR"
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
       className={cn("h-full", "scroll-smooth", dmSans.variable, dmSerifDisplay.variable, "font-sans", geist.variable)}
     >
       <body className="min-h-full font-sans antialiased">

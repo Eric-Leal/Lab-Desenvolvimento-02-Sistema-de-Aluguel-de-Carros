@@ -1,8 +1,6 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { ChevronLeft } from "lucide-react"
-import { Navbar } from "@/components/navbar/NavbarV1"
-import { DevClientSelector } from "@/components/dev/DevClientSelector"
 import { PedidoEditForm } from "@/components/pedidos/PedidoEditForm"
 import { rentalsService } from "@/services/rentals.service"
 import { usersService } from "@/services/users.service"
@@ -55,9 +53,6 @@ export default async function EditarPedidoPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-page">
-      <DevClientSelector />
-      <Navbar />
-
       <div className="relative overflow-hidden border-b border-border">
         <div
           className="absolute inset-0 pointer-events-none"

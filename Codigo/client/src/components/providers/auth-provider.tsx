@@ -2,10 +2,24 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import Cookies from 'js-cookie'
+import { jwtDecode } from 'jwt-decode'
 
 type User = {
   email: string
   role?: string
+}
+
+type JwtPayload = {
+  role?: string
+}
+
+function resolveRoleFromToken(token: string): string | undefined {
+  try {
+    const decoded = jwtDecode<JwtPayload>(token)
+    return decoded.role
+  } catch {
+    return undefined
+  }
 }
 
 type AuthContextType = {
@@ -30,8 +44,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (savedToken && savedUser) {
       try {
+        const parsedUser = JSON.parse(savedUser) as User
+        const tokenRole = resolveRoleFromToken(savedToken)
+        const mergedUser: User = {
+          ...parsedUser,
+          role: tokenRole ?? parsedUser.role,
+        }
+
         setToken(savedToken)
-        setUser(JSON.parse(savedUser))
+        setUser(mergedUser)
+        localStorage.setItem('carflow_user', JSON.stringify(mergedUser))
       } catch {
         Cookies.remove('carflow_token')
         localStorage.removeItem('carflow_user')
@@ -42,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const login = (email: string, token: string) => {
-    const userData = { email }
+    const userData = { email, role: resolveRoleFromToken(token) }
     setUser(userData)
     setToken(token)
     

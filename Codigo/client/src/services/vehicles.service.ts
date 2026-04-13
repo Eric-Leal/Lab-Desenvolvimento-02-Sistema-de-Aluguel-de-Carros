@@ -1,6 +1,34 @@
 ﻿import { API_ENDPOINTS } from "@/config/endpoints";
 import type { Automovel } from "@/types/vehicle";
 
+function getAccessToken(): string | null {
+  if (typeof document !== "undefined") {
+    const cookie = document.cookie
+      .split(";")
+      .map((item) => item.trim())
+      .find((item) => item.startsWith("carflow_token="));
+    if (cookie) {
+      const token = cookie.slice("carflow_token=".length);
+      if (token) return decodeURIComponent(token);
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("token");
+  }
+
+  return null;
+}
+
+function withAuthHeaders(base: HeadersInit = {}): HeadersInit {
+  const token = getAccessToken();
+  if (!token) return base;
+  return {
+    ...base,
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 export interface CreateAutomovelPayload {
   placa: string;
   ano: number;
@@ -31,6 +59,7 @@ export const vehiclesService = {
   listar: async (): Promise<Automovel[]> => {
     const response = await fetch(`${API_ENDPOINTS.vehiclesService}/automoveis`, {
       cache: "no-store",
+      headers: withAuthHeaders(),
     });
     if (!response.ok) throw new Error("Erro ao buscar veículos");
     return response.json();
@@ -39,6 +68,7 @@ export const vehiclesService = {
   listarDisponiveis: async (): Promise<Automovel[]> => {
     const response = await fetch(`${API_ENDPOINTS.vehiclesService}/automoveis/disponiveis`, {
       cache: "no-store",
+      headers: withAuthHeaders(),
     });
     if (!response.ok) throw new Error("Erro ao buscar veículos disponíveis");
     return response.json();
@@ -47,6 +77,7 @@ export const vehiclesService = {
   listarMeus: async (locadorOriginalId: string): Promise<Automovel[]> => {
     const response = await fetch(`${API_ENDPOINTS.vehiclesService}/automoveis/meus?locadorOriginalId=${encodeURIComponent(locadorOriginalId)}`, {
       cache: "no-store",
+      headers: withAuthHeaders(),
     });
     if (!response.ok) throw new Error("Erro ao buscar veículos do locador");
     return response.json();
@@ -55,6 +86,7 @@ export const vehiclesService = {
   buscarPorMatricula: async (matricula: number): Promise<Automovel> => {
     const response = await fetch(`${API_ENDPOINTS.vehiclesService}/automoveis/${matricula}`, {
       cache: "no-store",
+      headers: withAuthHeaders(),
     });
     if (!response.ok) throw new Error(`Veículo ${matricula} não encontrado`);
     return response.json();
@@ -63,7 +95,7 @@ export const vehiclesService = {
   criar: async (payload: CreateAutomovelPayload): Promise<Automovel> => {
     const response = await fetch(`${API_ENDPOINTS.vehiclesService}/automoveis`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: withAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(payload),
     });
     if (!response.ok) {
@@ -76,7 +108,7 @@ export const vehiclesService = {
   atualizar: async (matricula: number, payload: UpdateAutomovelPayload): Promise<Automovel> => {
     const response = await fetch(`${API_ENDPOINTS.vehiclesService}/automoveis/${matricula}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: withAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(payload),
     });
     if (!response.ok) {
@@ -92,6 +124,7 @@ export const vehiclesService = {
 
     const response = await fetch(`${API_ENDPOINTS.vehiclesService}/automoveis/${matricula}/imagens`, {
       method: "POST",
+      headers: withAuthHeaders(),
       body: formData,
     });
 
@@ -106,6 +139,7 @@ export const vehiclesService = {
   removerImagem: async (matricula: number, imageId: string): Promise<Automovel> => {
     const response = await fetch(`${API_ENDPOINTS.vehiclesService}/automoveis/${matricula}/imagens/${imageId}`, {
       method: "DELETE",
+      headers: withAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -119,6 +153,7 @@ export const vehiclesService = {
   excluir: async (matricula: number): Promise<void> => {
     const response = await fetch(`${API_ENDPOINTS.vehiclesService}/automoveis/${matricula}`, {
       method: "DELETE",
+      headers: withAuthHeaders(),
     });
     if (!response.ok) {
       const err = await response.text();

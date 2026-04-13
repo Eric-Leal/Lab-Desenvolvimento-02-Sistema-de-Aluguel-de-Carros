@@ -19,13 +19,22 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isLoading) return
+
+    const normalizedEmail = email.trim().toLowerCase()
+    const normalizedPassword = password.trim()
+    if (!normalizedEmail || !normalizedPassword) {
+      setError('Informe e-mail e senha para entrar.')
+      return
+    }
+
     setError(null)
     setIsLoading(true)
 
     try {
       const response = await api.post<{ accessToken: string; email: string }>('/usersService/auth/login', {
-        email,
-        password,
+        email: normalizedEmail,
+        password: normalizedPassword,
       })
 
       login(response.data.email, response.data.accessToken)

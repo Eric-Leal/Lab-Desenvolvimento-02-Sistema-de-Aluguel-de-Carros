@@ -1,8 +1,6 @@
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import { notFound } from "next/navigation"
-import { Navbar } from "@/components/navbar/NavbarV1"
-import { DevClientSelector } from "@/components/dev/DevClientSelector"
 import { SolicitarAluguelClient } from "@/components/veiculos/SolicitarAluguelClient"
 import { vehiclesService } from "@/services/vehicles.service"
 
@@ -38,9 +36,6 @@ export default async function SolicitarAluguelPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-page">
-      <DevClientSelector />
-      <Navbar />
-
       {/* Hero com gradiente */}
       <div className="relative overflow-hidden border-b border-border">
         <div

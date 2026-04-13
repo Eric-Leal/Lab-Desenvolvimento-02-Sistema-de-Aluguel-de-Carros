@@ -15,19 +15,23 @@ import com.example.service.cloudinary.CloudinaryUploadResult;
 import com.example.util.PasswordValidator;
 import io.micronaut.context.annotation.Executable;
 import jakarta.inject.Singleton;
-import lombok.AllArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.List;
 import java.util.UUID;
 
 @Singleton
-@AllArgsConstructor
 public class AgentService {
 
     private final AgentRepository agentRepository;
-    private final AgentMapper agentMapper;
     private final CloudinaryService cloudinaryService;
+
+    private final AgentMapper agentMapper = AgentMapper.INSTANCE;
+
+    public AgentService(AgentRepository agentRepository, CloudinaryService cloudinaryService) {
+        this.agentRepository = agentRepository;
+        this.cloudinaryService = cloudinaryService;
+    }
 
     @Executable
     public AgentResponse createAgent(CreateAgentRequest request) {

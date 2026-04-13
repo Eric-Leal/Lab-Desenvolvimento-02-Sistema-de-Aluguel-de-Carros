@@ -5,12 +5,17 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { AlertTriangle, CheckCircle, Loader2 } from "lucide-react"
 import type { Automovel } from "@/types/vehicle"
-import type { DevClient } from "@/store/use-dev-session"
 import { rentalsService } from "@/services/rentals.service"
+
+type AuthenticatedClient = {
+  id: string
+  nome: string
+  rendimentoTotal: number
+}
 
 interface SolicitarAluguelFormProps {
   vehicle: Automovel
-  currentClient: DevClient
+  currentClient: AuthenticatedClient
 }
 
 function formatBRL(value: number) {

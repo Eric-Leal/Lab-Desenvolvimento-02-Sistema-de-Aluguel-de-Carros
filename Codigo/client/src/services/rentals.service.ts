@@ -1,5 +1,33 @@
 import { API_ENDPOINTS } from '@/config/endpoints';
 
+function getAccessToken(): string | null {
+  if (typeof document !== "undefined") {
+    const cookie = document.cookie
+      .split(";")
+      .map((item) => item.trim())
+      .find((item) => item.startsWith("carflow_token="));
+    if (cookie) {
+      const token = cookie.slice("carflow_token=".length);
+      if (token) return decodeURIComponent(token);
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("token");
+  }
+
+  return null;
+}
+
+function withAuthHeaders(base: HeadersInit = {}): HeadersInit {
+  const token = getAccessToken();
+  if (!token) return base;
+  return {
+    ...base,
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 type DateLike = string | number[] | null | undefined;
 
 export interface CreatePedidoPayload {
@@ -75,7 +103,7 @@ export const rentalsService = {
   criarRascunho: async (payload: CreatePedidoPayload): Promise<PedidoResponse> => {
     const response = await fetch(`${BASE}/pedidos`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: withAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(payload),
     });
     if (!response.ok) {
@@ -89,6 +117,7 @@ export const rentalsService = {
   submeter: async (pedidoId: string): Promise<PedidoResponse> => {
     const response = await fetch(`${BASE}/pedidos/${pedidoId}/submeter`, {
       method: "PATCH",
+      headers: withAuthHeaders(),
     });
     if (!response.ok) {
       const err = await response.text();
@@ -99,15 +128,24 @@ export const rentalsService = {
   },
 
   buscarPorId: async (id: string): Promise<PedidoResponse> => {
-    const response = await fetch(`${BASE}/pedidos/${id}`, { cache: "no-store" });
+    const response = await fetch(`${BASE}/pedidos/${id}`, {
+      cache: "no-store",
+      headers: withAuthHeaders(),
+    });
     if (!response.ok) throw new Error(`Pedido ${id} não encontrado`);
     const data = await response.json();
     return normalizePedidoResponse(data);
   },
 
   listarMeus: async (clienteId: string): Promise<PedidoResponse[]> => {
-    const response = await fetch(`${BASE}/pedidos/meus?clienteId=${encodeURIComponent(clienteId)}`, { cache: "no-store" });
-    if (!response.ok) throw new Error("Erro ao buscar pedidos do cliente");
+    const response = await fetch(`${BASE}/pedidos/meus?clienteId=${encodeURIComponent(clienteId)}`, {
+      cache: "no-store",
+      headers: withAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err || `Erro ao buscar pedidos do cliente (HTTP ${response.status})`);
+    }
     const data = await response.json();
     return Array.isArray(data) ? data.map(normalizePedidoResponse) : [];
   },
@@ -115,7 +153,7 @@ export const rentalsService = {
   atualizar: async (pedidoId: string, payload: UpdatePedidoPayload): Promise<PedidoResponse> => {
     const response = await fetch(`${BASE}/pedidos/${pedidoId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: withAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(payload),
     });
     if (!response.ok) {
@@ -129,6 +167,7 @@ export const rentalsService = {
   cancelar: async (pedidoId: string): Promise<PedidoResponse> => {
     const response = await fetch(`${BASE}/pedidos/${pedidoId}/cancelar`, {
       method: "PATCH",
+      headers: withAuthHeaders(),
     });
     if (!response.ok) {
       const err = await response.text();
@@ -141,6 +180,7 @@ export const rentalsService = {
   excluirRascunho: async (pedidoId: string): Promise<void> => {
     const response = await fetch(`${BASE}/pedidos/${pedidoId}`, {
       method: "DELETE",
+      headers: withAuthHeaders(),
     });
     if (!response.ok) {
       const err = await response.text();

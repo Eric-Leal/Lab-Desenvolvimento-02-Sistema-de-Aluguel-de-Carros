@@ -1,13 +1,16 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { useDevSession } from "@/store/use-dev-session"
+import { useAuthUserId } from "@/hooks/use-auth-user-id"
+import { useAuth } from "@/components/providers/auth-provider"
 import { rentalsService, type PedidoResponse } from "@/services/rentals.service"
 import { vehiclesService } from "@/services/vehicles.service"
 import type { Automovel } from "@/types/vehicle"
 
 export function useClientePedidos() {
-  const currentClient = useDevSession((state) => state.currentClient)
+  const currentUserId = useAuthUserId()
+  const { user } = useAuth()
+  const isClient = user?.role === "CLIENT"
 
   const [pedidos, setPedidos] = useState<PedidoResponse[]>([])
   const [vehiclesMap, setVehiclesMap] = useState<Record<number, Automovel>>({})
@@ -15,7 +18,7 @@ export function useClientePedidos() {
   const [error, setError] = useState<string | null>(null)
 
   const carregarPedidos = useCallback(async () => {
-    if (!currentClient) {
+    if (!currentUserId || !isClient) {
       setPedidos([])
       setVehiclesMap({})
       setLoading(false)
@@ -26,7 +29,7 @@ export function useClientePedidos() {
     setError(null)
 
     try {
-      const pedidosCliente = await rentalsService.listarMeus(currentClient.id)
+      const pedidosCliente = await rentalsService.listarMeus(currentUserId)
       const pedidosOrdenados = pedidosCliente.slice().sort((a, b) =>
         new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime())
 
@@ -49,18 +52,27 @@ export function useClientePedidos() {
       })
       setVehiclesMap(map)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao carregar pedidos")
+      const message = err instanceof Error ? err.message : "Erro ao carregar pedidos"
+      const isForbidden = /403|forbidden/i.test(message)
+      if (isForbidden) {
+        setPedidos([])
+        setVehiclesMap({})
+        setError(null)
+      } else {
+        setError(message)
+      }
     } finally {
       setLoading(false)
     }
-  }, [currentClient])
+  }, [currentUserId, isClient])
 
   useEffect(() => {
     void carregarPedidos()
   }, [carregarPedidos])
 
   return {
-    currentClient,
+    currentUserId,
+    isClient,
     pedidos,
     vehiclesMap,
     loading,

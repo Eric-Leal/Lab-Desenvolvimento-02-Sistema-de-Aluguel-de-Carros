@@ -84,12 +84,14 @@ export function CadastroForm({ initialType = 'cliente' }: { initialType?: Accoun
 
     try {
       const { endpoint, body } = buildCadastroRequest(data, accountType)
+      const normalizedEmail = data.email.trim().toLowerCase()
+      const normalizedPassword = data.password.trim()
 
       await api.post(endpoint, body)
 
       const loginResponse = await api.post<{ accessToken: string; email: string }>('/usersService/auth/login', {
-        email: data.email,
-        password: data.password,
+        email: normalizedEmail,
+        password: normalizedPassword,
       })
 
       login(loginResponse.data.email, loginResponse.data.accessToken)

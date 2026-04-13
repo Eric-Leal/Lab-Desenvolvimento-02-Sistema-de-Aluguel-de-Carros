@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { Car, CheckCircle2, Loader2, SearchX } from "lucide-react"
 import { useClientePedidos } from "@/components/pedidos/useClientePedidos"
+import { useAuth } from "@/components/providers/auth-provider"
 import { contratoService, type ContratoResponse } from "@/services/contrato.service"
 
 function formatBRL(value: number) {
@@ -35,7 +37,8 @@ function getClassificacaoByScore(score?: string | null, fallbackRequiresFunding?
 }
 
 export function HistoricoLocacoesClient() {
-  const { currentClient, pedidos, vehiclesMap, loading, error } = useClientePedidos()
+  const { isAuthenticated, isLoading } = useAuth()
+  const { currentUserId, pedidos, vehiclesMap, loading, error } = useClientePedidos()
   const [contracts, setContracts] = useState<ContratoResponse[]>([])
   const [loadingContracts, setLoadingContracts] = useState(true)
 
@@ -73,13 +76,22 @@ export function HistoricoLocacoesClient() {
     return map
   }, [contracts])
 
-  if (!currentClient) {
+  if (isLoading) {
+    return null
+  }
+
+  if (!isAuthenticated) {
     return (
       <div className="rounded-xl border border-amber-300/60 bg-amber-50 p-5 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
-        Selecione um cliente no modo de desenvolvimento para visualizar o histórico de locações.
+        <p className="font-semibold">Faça login para visualizar o histórico de locações.</p>
+        <Link href="/login" className="mt-3 inline-flex rounded-md border border-amber-300 bg-white px-4 py-2 text-sm font-medium text-amber-800">
+          Ir para login
+        </Link>
       </div>
     )
   }
+
+  if (!currentUserId) return null
 
   return (
     <div className="space-y-6">

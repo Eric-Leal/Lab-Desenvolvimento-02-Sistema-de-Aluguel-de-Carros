@@ -1,11 +1,6 @@
 import Link from "next/link"
-import { notFound } from "next/navigation"
 import { ChevronLeft } from "lucide-react"
-import { Navbar } from "@/components/navbar/NavbarV1"
-import { DevClientSelector } from "@/components/dev/DevClientSelector"
-import { PedidoDetailClient } from "@/components/pedidos/PedidoDetailClient"
-import { rentalsService } from "@/services/rentals.service"
-import { vehiclesService } from "@/services/vehicles.service"
+import { PedidoDetailLoader } from "@/components/pedidos/PedidoDetailClient"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -23,25 +18,8 @@ export default async function PedidoDetailPage({ params, searchParams }: Props) 
   const { id } = await params
   const { novo } = await searchParams
 
-  let pedido
-  try {
-    pedido = await rentalsService.buscarPorId(id)
-  } catch {
-    notFound()
-  }
-
-  let vehicle = null
-  try {
-    vehicle = await vehiclesService.buscarPorMatricula(pedido.automovelMatricula)
-  } catch {
-    // vehicle pode não estar disponível, continua sem
-  }
-
   return (
     <div className="min-h-screen bg-page">
-      <DevClientSelector />
-      <Navbar />
-
       {/* Hero */}
       <div className="relative overflow-hidden border-b border-border">
         <div
@@ -72,7 +50,7 @@ export default async function PedidoDetailPage({ params, searchParams }: Props) 
       </div>
 
       <main className="mx-auto max-w-4xl px-6 py-10 lg:px-10 lg:py-14">
-        <PedidoDetailClient pedido={pedido} vehicle={vehicle} isNew={novo === "true"} />
+        <PedidoDetailLoader pedidoId={id} isNew={novo === "true"} />
       </main>
     </div>
   )

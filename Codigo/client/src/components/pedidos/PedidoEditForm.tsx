@@ -6,13 +6,18 @@ import { useRouter } from "next/navigation"
 import { AlertTriangle, CheckCircle, Loader2 } from "lucide-react"
 import type { Automovel } from "@/types/vehicle"
 import type { PedidoResponse } from "@/services/rentals.service"
-import type { DevClient } from "@/store/use-dev-session"
 import { rentalsService } from "@/services/rentals.service"
+
+type AuthenticatedClient = {
+  id: string
+  nome: string
+  rendimentoTotal: number
+}
 
 interface PedidoEditFormProps {
   pedido: PedidoResponse
   vehicle: Automovel
-  currentClient: DevClient
+  currentClient: AuthenticatedClient
 }
 
 const FINANCING_THRESHOLD = 0.30
@@ -201,7 +206,7 @@ export function PedidoEditForm({ pedido, vehicle, currentClient }: PedidoEditFor
           <button
             disabled={!datesValid || loading !== null}
             onClick={() => handleSave(true)}
-            className="flex-1 rounded-xl bg-(--primary-700) py-4 text-sm font-semibold text-white transition hover:bg-(--primary-800) disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex-1 rounded-xl bg-primary-700 py-4 text-sm font-semibold text-white transition hover:bg-primary-800 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {loading === "submit" ? (
               <span className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin" /> Submetendo...</span>

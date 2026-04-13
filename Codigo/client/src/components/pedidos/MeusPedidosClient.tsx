@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Loader2, SearchX } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { rentalsService, type PedidoResponse } from "@/services/rentals.service"
 import { PedidoListItem } from "@/components/pedidos/PedidoListItem"
 import { PedidoConfirmModal } from "@/components/pedidos/PedidoConfirmModal"
 import type { PedidoAction } from "@/components/pedidos/pedido-status"
 import { useClientePedidos } from "@/components/pedidos/useClientePedidos"
+import { useAuth } from "@/components/providers/auth-provider"
 
 interface ConfirmState {
   open: boolean
@@ -42,7 +44,8 @@ const FILTER_OPTIONS: Array<{ key: FilterKey; label: string }> = [
 
 export function MeusPedidosClient() {
   const router = useRouter()
-  const { currentClient, pedidos, vehiclesMap, loading, error, setError, reload } = useClientePedidos()
+  const { isAuthenticated, isLoading } = useAuth()
+  const { currentUserId, isClient, pedidos, vehiclesMap, loading, error, setError, reload } = useClientePedidos()
 
   const [activeFilter, setActiveFilter] = useState<FilterKey>("todos")
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -106,13 +109,31 @@ export function MeusPedidosClient() {
     }
   }
 
-  if (!currentClient) {
+  if (isLoading) {
+    return null
+  }
+
+  if (!isAuthenticated) {
     return (
       <div className="rounded-xl border border-amber-300/60 bg-amber-50 p-5 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
-        Selecione um cliente no modo de desenvolvimento para visualizar os pedidos.
+        <p className="font-semibold">Faça login para visualizar seus pedidos.</p>
+        <Link href="/login" className="mt-3 inline-flex rounded-md border border-amber-300 bg-white px-4 py-2 text-sm font-medium text-amber-800">
+          Ir para login
+        </Link>
       </div>
     )
   }
+
+  if (!isClient) {
+    return (
+      <div className="rounded-xl border border-blue-300/60 bg-blue-50 p-5 text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
+        <p className="font-semibold">A área de pedidos é exclusiva para contas de cliente.</p>
+        <p className="mt-1 text-sm">Sua conta atual não possui esse tipo de acesso.</p>
+      </div>
+    )
+  }
+
+  if (!currentUserId) return null
 
   return (
     <div className="space-y-6">
@@ -144,7 +165,7 @@ export function MeusPedidosClient() {
                 key={option.key}
                 onClick={() => setActiveFilter(option.key)}
                 className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition ${active
-                  ? "bg-(--primary-700) text-white"
+                  ? "bg-primary-700 text-white"
                   : "text-text-secondary hover:bg-surface-2 hover:text-text-primary"
                 }`}
               >

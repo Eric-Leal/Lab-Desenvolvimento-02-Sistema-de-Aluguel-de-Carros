@@ -1,8 +1,13 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Shield, Timer, Sparkles } from 'lucide-react'
+import { VehicleCard } from '@/components/veiculos/VehicleCard'
+import { usersService } from '@/services/users.service'
+import { vehiclesService } from '@/services/vehicles.service'
+import type { Automovel } from '@/types/vehicle'
 
 const benefits = [
   {
@@ -26,13 +31,47 @@ import { useAuth } from '@/components/providers/auth-provider'
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuth()
+  const [vehicles, setVehicles] = useState<Automovel[]>([])
+  const [locadoresMap, setLocadoresMap] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    async function loadVehicles() {
+      let data: Automovel[] = []
+
+      try {
+        data = await vehiclesService.listarDisponiveis()
+      } catch {
+        setVehicles([])
+        setLocadoresMap({})
+        return
+      }
+
+      setVehicles(data)
+      const locadorIds = data.map((vehicle) => vehicle.locadorOriginalId)
+      if (locadorIds.length === 0) {
+        setLocadoresMap({})
+        return
+      }
+
+      try {
+        const map = await usersService.buscarAgents(locadorIds)
+        setLocadoresMap(map)
+      } catch {
+        setLocadoresMap({})
+      }
+    }
+
+    void loadVehicles()
+  }, [])
+
+  const featuredVehicles = useMemo(
+    () => vehicles.filter((vehicle) => vehicle.disponivel).slice(0, 6),
+    [vehicles],
+  )
+
   return (
     <main>
       <section className="relative overflow-hidden bg-linear-to-br from-primary-700 to-primary-600 px-6 py-20 sm:px-8 lg:px-0 lg:py-28">
-        <div className="pointer-events-none absolute inset-0 opacity-40">
-          <Image src="/images/home/hero-pattern.svg" alt="" fill className="object-cover" aria-hidden="true" />
-        </div>
-
         <div className="ds-shell relative z-10 grid items-center gap-12 lg:grid-cols-[1fr_500px]">
           <div className="space-y-10">
             <div className="space-y-6">
@@ -50,7 +89,7 @@ export default function Home() {
 
             <div className="flex flex-wrap gap-4">
               <Link
-                href="#veiculos"
+                href="/veiculos"
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-white px-8 text-sm font-semibold text-primary-700 transition-all hover:bg-neutral-50 hover:shadow-lg active:scale-95"
               >
                 Ver Veículos
@@ -68,7 +107,7 @@ export default function Home() {
 
           <div className="overflow-hidden rounded-2xl shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)]">
             <Image
-              src="/images/home/hero-car-56bb0f.png"
+              src="/images/carro.webp"
               alt="Carro esportivo premium"
               width={800}
               height={512}
@@ -106,16 +145,28 @@ export default function Home() {
             </div>
 
             <Link
-              href="#"
+              href="/veiculos"
               className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-surface px-6 text-sm font-semibold text-primary-600 transition-all hover:bg-surface-2 active:scale-95"
             >
               Ver todos
             </Link>
           </div>
 
-          <div className="rounded-xl border border-border/60 bg-surface-2 p-8 text-center text-text-secondary">
-            Nenhum carro disponivel ainda.
-          </div>
+          {featuredVehicles.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {featuredVehicles.map((vehicle) => (
+                <VehicleCard
+                  key={vehicle.matricula}
+                  vehicle={vehicle}
+                  locadorNome={locadoresMap[vehicle.locadorOriginalId]}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-border/60 bg-surface-2 p-8 text-center text-text-secondary">
+              Nenhum carro disponivel ainda.
+            </div>
+          )}
         </div>
       </section>
 

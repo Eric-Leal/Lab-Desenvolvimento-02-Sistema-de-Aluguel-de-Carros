@@ -5,6 +5,8 @@ import { jwtDecode } from 'jwt-decode'
 import api from '@/lib/api'
 import { useAuth } from '@/components/providers/auth-provider'
 
+type UserRole = 'CLIENT' | 'AGENT'
+
 type Address = {
   cep?: string
   logradouro?: string
@@ -21,6 +23,7 @@ type RawProfile = {
   email?: string
   profissao?: string
   documento?: string
+  rendimentoTotal?: number
   endereco?: Address
   [key: string]: unknown
 }
@@ -31,11 +34,13 @@ export type CurrentUserProfile = {
   email: string
   profissao: string
   documento: string
+  rendimentoTotal?: number
   endereco: Address
 }
 
 type JwtPayload = {
   sub?: string
+  role?: string
 }
 
 function normalizeKey(value: string): string {
@@ -62,7 +67,7 @@ function resolveAddress(data: RawProfile): Address {
 }
 
 export function useCurrentUser() {
-  const { token } = useAuth()
+  const { token, user } = useAuth()
   const [profile, setProfile] = useState<CurrentUserProfile | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -77,8 +82,38 @@ export function useCurrentUser() {
     }
   }, [token])
 
+  const userRole = useMemo<UserRole | null>(() => {
+    const roleFromUser = user?.role?.toUpperCase()
+    if (roleFromUser === 'CLIENT' || roleFromUser === 'AGENT') return roleFromUser
+
+    if (!token) return null
+    try {
+      const decoded = jwtDecode<JwtPayload>(token)
+      const roleFromToken = decoded.role?.toUpperCase()
+      if (roleFromToken === 'CLIENT' || roleFromToken === 'AGENT') return roleFromToken
+    } catch {
+      return null
+    }
+
+    return null
+  }, [token, user?.role])
+
+  const endpointCandidates = useMemo(() => {
+    if (!userId) return [] as string[]
+
+    const preferred = userRole === 'AGENT'
+      ? `/usersService/agent/${userId}`
+      : `/usersService/client/${userId}`
+
+    const fallback = userRole === 'AGENT'
+      ? `/usersService/client/${userId}`
+      : `/usersService/agent/${userId}`
+
+    return userRole ? [preferred, fallback] : [preferred, fallback]
+  }, [userId, userRole])
+
   const refresh = useCallback(async () => {
-    if (!userId) {
+    if (!userId || endpointCandidates.length === 0) {
       setProfile(null)
       return
     }
@@ -86,8 +121,23 @@ export function useCurrentUser() {
     try {
       setLoading(true)
       setError(null)
-      const response = await api.get<RawProfile>(`/usersService/client/${userId}`)
-      const data = response.data
+      let data: RawProfile | null = null
+      let lastError: Error | null = null
+
+      for (const endpoint of endpointCandidates) {
+        try {
+          const response = await api.get<RawProfile>(endpoint)
+          data = response.data
+          break
+        } catch (err) {
+          lastError = err instanceof Error ? err : new Error('Erro ao carregar usuario atual')
+        }
+      }
+
+      if (!data) {
+        throw lastError ?? new Error('Erro ao carregar usuario atual')
+      }
+
       const address = resolveAddress(data)
 
       setProfile({
@@ -96,6 +146,7 @@ export function useCurrentUser() {
         email: data.email || '',
         profissao: data.profissao || '',
         documento: data.documento || '',
+        rendimentoTotal: typeof data.rendimentoTotal === 'number' ? data.rendimentoTotal : undefined,
         endereco: address,
       })
     } catch (err) {
@@ -104,7 +155,7 @@ export function useCurrentUser() {
     } finally {
       setLoading(false)
     }
-  }, [userId])
+  }, [endpointCandidates, userId])
 
   useEffect(() => {
     void refresh()

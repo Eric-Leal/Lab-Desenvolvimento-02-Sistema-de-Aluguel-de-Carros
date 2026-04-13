@@ -1,5 +1,3 @@
-import { Navbar } from "@/components/navbar/NavbarV1"
-import { DevAgentSelector } from "@/components/dev/DevAgentSelector"
 import { VehicleManagementClient } from "@/components/veiculos/gestao/VehicleManagementClient"
 
 export const metadata = {
@@ -10,9 +8,6 @@ export const metadata = {
 export default function GestaoVeiculosPage() {
   return (
     <div className="min-h-screen bg-page">
-      <DevAgentSelector />
-      <Navbar />
-
       <div className="relative overflow-hidden border-b border-border">
         <div
           className="absolute inset-0 pointer-events-none"

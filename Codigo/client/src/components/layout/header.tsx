@@ -9,11 +9,24 @@ import { UserDropdown } from '@/components/layout/user-dropdown'
 
 const navItems = [
   { href: '/', label: 'Início' },
-  { href: '#veiculos', label: 'Veículos' },
+  { href: '/veiculos', label: 'Veículos' },
+]
+
+const authenticatedOnlyNavItems = [
+  { href: '/pedidos', label: 'Pedidos' },
+  { href: '/veiculos/gestao', label: 'Gestão' },
 ]
 
 export function Header() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, user } = useAuth()
+
+  const visibleNavItems = isAuthenticated
+    ? [
+        ...navItems,
+        ...(user?.role === 'CLIENT' ? [authenticatedOnlyNavItems[0]] : []),
+        ...(user?.role === 'AGENT' ? [authenticatedOnlyNavItems[1]] : []),
+      ]
+    : navItems
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-surface/80 backdrop-blur-xl">
@@ -43,7 +56,7 @@ export function Header() {
           </Link>
 
           <div className="hidden items-center gap-8 md:flex">
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
@@ -92,4 +105,4 @@ export function Header() {
       </div>
     </header>
   )
-}
+}

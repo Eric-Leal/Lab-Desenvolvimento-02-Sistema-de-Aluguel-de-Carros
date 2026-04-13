@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/navbar/NavbarV1"
 import { VehicleGrid } from "@/components/veiculos/VehicleGrid"
 import { vehiclesService } from "@/services/vehicles.service"
 import { usersService } from "@/services/users.service"
@@ -15,16 +14,19 @@ export default async function VeiculosPage() {
 
   try {
     vehicles = await vehiclesService.listar()
-    const locadorIds = vehicles.map((v) => v.locadorOriginalId)
-    locadoresMap = await usersService.buscarAgents(locadorIds)
   } catch {
     vehicles = []
   }
 
+  try {
+    const locadorIds = vehicles.map((v) => v.locadorOriginalId)
+    locadoresMap = await usersService.buscarAgents(locadorIds)
+  } catch {
+    locadoresMap = {}
+  }
+
   return (
     <div className="min-h-screen bg-page">
-      <Navbar />
-
       {/* Hero da seção com gradiente */}
       <div className="relative overflow-hidden border-b border-border">
         <div
