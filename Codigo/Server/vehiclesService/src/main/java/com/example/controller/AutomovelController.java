@@ -84,6 +84,15 @@ public class AutomovelController {
         return HttpResponse.ok(automovelService.updateProprietario(matricula, request));
     }
 
+    @Patch("/{matricula}/disponibilidade")
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    public HttpResponse<Void> updateDisponibilidade(
+            @PathVariable Long matricula,
+            @QueryValue boolean disponivel) {
+        automovelService.updateDisponibilidade(matricula, disponivel);
+        return HttpResponse.noContent();
+    }
+
     @Get("/{matricula}/locador-original")
     public HttpResponse<Map<String, UUID>> getLocadorOriginal(@PathVariable Long matricula) {
         return HttpResponse.ok(Map.of("locadorOriginalId", automovelService.getLocadorOriginalId(matricula)));
