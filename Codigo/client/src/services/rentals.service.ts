@@ -59,6 +59,12 @@ export interface PedidoResponse {
   atualizadoEm: string;
 }
 
+export interface BancoFinanciamentoHistorico {
+  pedidoId: string;
+  decisao: "APROVADO" | "REPROVADO";
+  atualizadoEm: string;
+}
+
 function pad(value: number): string {
   return value.toString().padStart(2, "0");
 }
@@ -186,5 +192,50 @@ export const rentalsService = {
       const err = await response.text();
       throw new Error(err || "Erro ao excluir rascunho");
     }
+  },
+
+  listarDisponiveisBanco: async (): Promise<PedidoResponse[]> => {
+    const response = await fetch(`${BASE}/pedidos/banco/disponiveis`, {
+      cache: "no-store",
+      headers: withAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err || `Erro ao buscar pedidos disponiveis para banco (HTTP ${response.status})`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data.map(normalizePedidoResponse) : [];
+  },
+
+  aprovarFinanciamento: async (pedidoId: string, bancoId: string): Promise<PedidoResponse> => {
+    const response = await fetch(
+      `${BASE}/pedidos/${pedidoId}/financiamento/aprovar?bancoId=${encodeURIComponent(bancoId)}`,
+      {
+        method: "PATCH",
+        headers: withAuthHeaders(),
+      }
+    );
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err || "Erro ao aprovar financiamento");
+    }
+    const data = await response.json();
+    return normalizePedidoResponse(data);
+  },
+
+  reprovarFinanciamento: async (pedidoId: string, bancoId: string): Promise<PedidoResponse> => {
+    const response = await fetch(
+      `${BASE}/pedidos/${pedidoId}/financiamento/reprovar?bancoId=${encodeURIComponent(bancoId)}`,
+      {
+        method: "PATCH",
+        headers: withAuthHeaders(),
+      }
+    );
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err || "Erro ao reprovar financiamento");
+    }
+    const data = await response.json();
+    return normalizePedidoResponse(data);
   },
 };
