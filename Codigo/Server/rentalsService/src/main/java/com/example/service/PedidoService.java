@@ -15,6 +15,7 @@ import com.example.mapper.PedidoMapper;
 import com.example.model.Pedido;
 import com.example.repository.PedidoRepository;
 import io.micronaut.context.annotation.Executable;
+import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import jakarta.inject.Singleton;
 
 import java.math.BigDecimal;
@@ -98,13 +99,26 @@ public class PedidoService {
     }
 
     @Executable
-    public PedidoResponse cancelar(UUID id) {
+    public PedidoResponse cancelar(UUID id, String authorization) {
         Pedido pedido = getPedidoOrThrow(id);
         if (StatusGeral.CONTRATO_FECHADO.name().equals(pedido.getStatusGeral())) {
             throw new InvalidStatusTransitionException("Pedido com contrato fechado não pode ser cancelado.");
         }
+
+        boolean deveLiberarVeiculo = StatusGeral.EM_ANALISE_BANCO.name().equals(pedido.getStatusGeral());
+        if (deveLiberarVeiculo) {
+            atualizarDisponibilidadeVeiculo(pedido.getAutomovelMatricula(), true, authorization);
+        }
+
         pedido.setStatusGeral(StatusGeral.CANCELADO.name());
-        return pedidoMapper.toResponse(pedidoRepository.update(pedido));
+        try {
+            return pedidoMapper.toResponse(pedidoRepository.update(pedido));
+        } catch (RuntimeException e) {
+            if (deveLiberarVeiculo) {
+                tentarCompensarDisponibilidade(pedido.getAutomovelMatricula(), false, authorization);
+            }
+            throw e;
+        }
     }
 
     @Executable
@@ -141,18 +155,26 @@ public class PedidoService {
     }
 
     @Executable
-    public PedidoResponse aprovar(UUID id) {
+    public PedidoResponse aprovar(UUID id, String authorization) {
         Pedido pedido = getPedidoOrThrow(id);
         if (!StatusGeral.SUBMETIDO.name().equals(pedido.getStatusGeral())) {
             throw new InvalidStatusTransitionException("Pedido só pode ser aprovado quando SUBMETIDO.");
         }
+
+        atualizarDisponibilidadeVeiculo(pedido.getAutomovelMatricula(), false, authorization);
+
         pedido.setStatusLocador(StatusLocador.APROVADO.name());
         if (Boolean.TRUE.equals(pedido.getRequerFinanciamento())) {
             pedido.setStatusGeral(StatusGeral.EM_ANALISE_BANCO.name());
         } else {
             pedido.setStatusGeral(StatusGeral.CONTRATO_FECHADO.name());
         }
-        return pedidoMapper.toResponse(pedidoRepository.update(pedido));
+        try {
+            return pedidoMapper.toResponse(pedidoRepository.update(pedido));
+        } catch (RuntimeException e) {
+            tentarCompensarDisponibilidade(pedido.getAutomovelMatricula(), true, authorization);
+            throw e;
+        }
     }
 
     @Executable
@@ -186,14 +208,22 @@ public class PedidoService {
     }
 
     @Executable
-    public PedidoResponse reprovarFinanciamento(UUID id, UUID bancoId) {
+    public PedidoResponse reprovarFinanciamento(UUID id, UUID bancoId, String authorization) {
         Pedido pedido = getPedidoOrThrow(id);
         if (!StatusGeral.EM_ANALISE_BANCO.name().equals(pedido.getStatusGeral())) {
             throw new InvalidStatusTransitionException("Pedido não está em análise bancária.");
         }
+
+        atualizarDisponibilidadeVeiculo(pedido.getAutomovelMatricula(), true, authorization);
+
         pedido.setBancoId(bancoId);
         pedido.setStatusGeral(StatusGeral.REPROVADO_BANCO.name());
-        return pedidoMapper.toResponse(pedidoRepository.update(pedido));
+        try {
+            return pedidoMapper.toResponse(pedidoRepository.update(pedido));
+        } catch (RuntimeException e) {
+            tentarCompensarDisponibilidade(pedido.getAutomovelMatricula(), false, authorization);
+            throw e;
+        }
     }
 
     // Helpers
@@ -211,6 +241,26 @@ public class PedidoService {
                 .collect(Collectors.toList());
         } catch (Exception e) {
             return List.of();
+        }
+    }
+
+    private void atualizarDisponibilidadeVeiculo(Long matricula, boolean disponivel, String authorization) {
+        String acao = disponivel ? "liberar" : "reservar";
+        try {
+            vehiclesServiceClient.updateDisponibilidade(matricula, disponivel, authorization);
+        } catch (HttpClientResponseException e) {
+            String detalhe = e.getResponse().getBody(String.class).orElse(e.getMessage());
+            throw new InvalidStatusTransitionException("Não foi possível " + acao + " o veículo: " + detalhe);
+        } catch (Exception e) {
+            throw new InvalidStatusTransitionException("Não foi possível " + acao + " o veículo neste momento.");
+        }
+    }
+
+    private void tentarCompensarDisponibilidade(Long matricula, boolean disponivel, String authorization) {
+        try {
+            vehiclesServiceClient.updateDisponibilidade(matricula, disponivel, authorization);
+        } catch (Exception ignored) {
+            // Melhor esforço: evita mascarar a exceção principal da transição.
         }
     }
 }

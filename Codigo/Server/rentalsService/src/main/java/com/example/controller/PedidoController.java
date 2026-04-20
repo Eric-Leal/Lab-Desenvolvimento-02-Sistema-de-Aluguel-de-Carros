@@ -92,8 +92,11 @@ public class PedidoController {
      * Status geral → CANCELADO (antes de CONTRATO_FECHADO).
      */
     @Patch("/{id}/cancelar")
-    public HttpResponse<PedidoResponse> cancelar(@PathVariable UUID id) {
-        return HttpResponse.ok(pedidoService.cancelar(id));
+    public HttpResponse<PedidoResponse> cancelar(
+            @PathVariable UUID id,
+            HttpRequest<?> request) {
+        String authorization = request.getHeaders().get("Authorization");
+        return HttpResponse.ok(pedidoService.cancelar(id, authorization != null ? authorization : ""));
     }
 
     /**
@@ -135,8 +138,11 @@ public class PedidoController {
      * Aprova → CONTRATO_FECHADO ou EM_ANALISE_BANCO.
      */
     @Patch("/{id}/aprovar")
-    public HttpResponse<PedidoResponse> aprovar(@PathVariable UUID id) {
-        return HttpResponse.ok(pedidoService.aprovar(id));
+    public HttpResponse<PedidoResponse> aprovar(
+            @PathVariable UUID id,
+            HttpRequest<?> request) {
+        String authorization = request.getHeaders().get("Authorization");
+        return HttpResponse.ok(pedidoService.aprovar(id, authorization != null ? authorization : ""));
     }
 
     /**
@@ -181,7 +187,9 @@ public class PedidoController {
     @Patch("/{id}/financiamento/reprovar")
     public HttpResponse<PedidoResponse> reprovarFinanciamento(
             @PathVariable UUID id,
-            @QueryValue UUID bancoId) {
-        return HttpResponse.ok(pedidoService.reprovarFinanciamento(id, bancoId));
+            @QueryValue UUID bancoId,
+            HttpRequest<?> request) {
+        String authorization = request.getHeaders().get("Authorization");
+        return HttpResponse.ok(pedidoService.reprovarFinanciamento(id, bancoId, authorization != null ? authorization : ""));
     }
 }

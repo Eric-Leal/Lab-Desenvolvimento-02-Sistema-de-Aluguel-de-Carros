@@ -167,6 +167,20 @@ public class AutomovelService {
     }
 
     @Executable
+    public void updateDisponibilidade(Long matricula, boolean disponivel) {
+        Automovel automovel = automovelRepository.findById(matricula)
+            .orElseThrow(() -> new AutomovelNotFoundException(matricula));
+
+        if (Boolean.valueOf(disponivel).equals(automovel.getDisponivel())) {
+            String estado = disponivel ? "disponível" : "indisponível";
+            throw new BusinessException("Veículo já está " + estado + ".");
+        }
+
+        automovel.setDisponivel(disponivel);
+        automovelRepository.update(automovel);
+    }
+
+    @Executable
     public UUID getLocadorOriginalId(Long matricula) {
         return automovelRepository.findById(matricula)
             .map(Automovel::getLocadorOriginalId)
