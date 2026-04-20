@@ -207,6 +207,48 @@ export const rentalsService = {
     return Array.isArray(data) ? data.map(normalizePedidoResponse) : [];
   },
 
+  listarPendentesLocador: async (locadorId: string): Promise<PedidoResponse[]> => {
+    const response = await fetch(
+      `${BASE}/pedidos/agente/pendentes?locadorId=${encodeURIComponent(locadorId)}`,
+      {
+        cache: "no-store",
+        headers: withAuthHeaders(),
+      }
+    );
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err || `Erro ao buscar pedidos pendentes do locador (HTTP ${response.status})`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data.map(normalizePedidoResponse) : [];
+  },
+
+  aprovarLocador: async (pedidoId: string): Promise<PedidoResponse> => {
+    const response = await fetch(`${BASE}/pedidos/${pedidoId}/aprovar`, {
+      method: "PATCH",
+      headers: withAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err || "Erro ao aprovar pedido do locador");
+    }
+    const data = await response.json();
+    return normalizePedidoResponse(data);
+  },
+
+  reprovarLocador: async (pedidoId: string): Promise<PedidoResponse> => {
+    const response = await fetch(`${BASE}/pedidos/${pedidoId}/reprovar`, {
+      method: "PATCH",
+      headers: withAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err || "Erro ao reprovar pedido do locador");
+    }
+    const data = await response.json();
+    return normalizePedidoResponse(data);
+  },
+
   aprovarFinanciamento: async (pedidoId: string, bancoId: string): Promise<PedidoResponse> => {
     const response = await fetch(
       `${BASE}/pedidos/${pedidoId}/financiamento/aprovar?bancoId=${encodeURIComponent(bancoId)}`,

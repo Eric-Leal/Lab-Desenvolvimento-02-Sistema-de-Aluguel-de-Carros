@@ -167,18 +167,30 @@ export function FinanciamentoDashboardClient({ mode, heading, subtitle }: Financ
     setError(null)
 
     try {
-      const pendentes = await rentalsService.listarDisponiveisBanco()
+      let pendentes: PedidoResponse[] = []
+
+      if (mode === 'financeiro') {
+        if (!userId) {
+          setPendingPedidos([])
+          setSelectedId(null)
+          return
+        }
+        pendentes = await rentalsService.listarPendentesLocador(userId)
+      } else {
+        pendentes = await rentalsService.listarDisponiveisBanco()
+      }
 
       const hydrated = await hydratePedidos(pendentes)
       setPendingPedidos(hydrated)
-      if (mode === 'financeiro') setSelectedId(hydrated[0]?.id ?? null)
+      setSelectedId(hydrated[0]?.id ?? null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar pedidos.')
       setPendingPedidos([])
+      setSelectedId(null)
     } finally {
       setLoading(false)
     }
-  }, [hydratePedidos, mode])
+  }, [hydratePedidos, mode, userId])
 
   useEffect(() => {
     void loadDashboardData()
@@ -199,7 +211,16 @@ export function FinanciamentoDashboardClient({ mode, heading, subtitle }: Financ
     setError(null)
 
     try {
-      if (userId) {
+      if (mode === 'financeiro') {
+        if (decisao === 'APROVADO') {
+          await rentalsService.aprovarLocador(selectedPedido.id)
+        } else {
+          await rentalsService.reprovarLocador(selectedPedido.id)
+        }
+      } else {
+        if (!userId) {
+          throw new Error('Usuário do banco não identificado.')
+        }
         if (decisao === 'APROVADO') {
           await rentalsService.aprovarFinanciamento(selectedPedido.id, userId)
         } else {
@@ -353,12 +374,74 @@ export function FinanciamentoDashboardClient({ mode, heading, subtitle }: Financ
       </article>
     )
   ) : (
-    <article className="rounded-2xl bg-surface px-6 py-10 text-center">
-      <Eye className="mx-auto h-11 w-11 text-text-disabled" />
-      <p className="mt-5 text-xl leading-tight text-text-secondary md:text-2xl" style={{ fontFamily: 'var(--font-dm-sans)' }}>
-        Selecione um pedido para analisar
-      </p>
-    </article>
+    selectedPedido ? (
+      <article className="rounded-2xl bg-surface p-5 shadow-[0_14px_28px_rgba(16,19,31,0.04)]">
+        <h3 className="text-[30px] leading-none text-text-primary md:text-[34px]" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+          Análise do Banco
+        </h3>
+
+        <div className="mt-5 overflow-hidden rounded-xl bg-surface-2">
+          <div className="relative h-44 w-full">
+            <Image
+              src={selectedPedido.imagemUrl}
+              alt={selectedPedido.veiculoNome}
+              fill
+              className="object-cover"
+              sizes="(max-width: 1280px) 100vw, 420px"
+            />
+          </div>
+        </div>
+
+        <dl className="mt-5 space-y-2.5 text-sm">
+          <div className="flex items-center justify-between gap-4">
+            <dt className="text-text-secondary">Veículo</dt>
+            <dd className="font-semibold text-text-primary">{selectedPedido.veiculoNome}</dd>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <dt className="text-text-secondary">Placa</dt>
+            <dd className="font-semibold text-text-primary">{selectedPedido.placa}</dd>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <dt className="text-text-secondary">Período</dt>
+            <dd className="font-semibold text-text-primary">{selectedPedido.periodoLabel}</dd>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <dt className="text-text-secondary">Locador</dt>
+            <dd className="font-semibold text-text-primary">{selectedPedido.locadorNome}</dd>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <dt className="text-text-secondary">Valor Total</dt>
+            <dd className="text-2xl text-accent md:text-3xl" style={{ fontFamily: 'var(--font-dm-serif)' }}>
+              {formatCurrency(selectedPedido.valorTotal)}
+            </dd>
+          </div>
+        </dl>
+
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <button
+            onClick={() => void handleDecision('APROVADO')}
+            disabled={isSubmitting}
+            className="inline-flex h-12 items-center justify-center rounded-lg bg-[#157A4E] px-4 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60"
+          >
+            Aprovar
+          </button>
+          <button
+            onClick={() => void handleDecision('REPROVADO')}
+            disabled={isSubmitting}
+            className="inline-flex h-12 items-center justify-center rounded-lg border border-[#E7B7B7] bg-white px-4 text-sm font-semibold text-[#E02E2E] transition hover:bg-[#FFF1F1] disabled:opacity-60"
+          >
+            Reprovar
+          </button>
+        </div>
+      </article>
+    ) : (
+      <article className="rounded-2xl bg-surface px-6 py-10 text-center">
+        <Eye className="mx-auto h-11 w-11 text-text-disabled" />
+        <p className="mt-5 text-xl leading-tight text-text-secondary md:text-2xl" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+          Selecione um pedido para analisar
+        </p>
+      </article>
+    )
   )
 
   return (
@@ -402,7 +485,7 @@ export function FinanciamentoDashboardClient({ mode, heading, subtitle }: Financ
           <div className="grid gap-6 xl:grid-cols-[1.7fr_1fr]">
             <section>
               <h2 className="text-4xl leading-tight text-text-primary sm:text-5xl" style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 700 }}>
-                Pedidos para Financiamento
+                {mode === 'financeiro' ? 'Pedidos do Locador' : 'Pedidos para Financiamento'}
               </h2>
 
               {loading ? (
@@ -412,14 +495,13 @@ export function FinanciamentoDashboardClient({ mode, heading, subtitle }: Financ
               ) : (
                 <div className="mt-4 space-y-3.5">
                   {pendingPedidos.map((pedido) => {
-                    const isActive = mode === 'financeiro' && selectedId === pedido.id
                     return (
                       <button
                         key={pedido.id}
-                        onClick={() => mode === 'financeiro' && setSelectedId(pedido.id)}
+                        onClick={() => setSelectedId(pedido.id)}
                         className={cn(
                           'flex w-full items-center justify-between gap-4 rounded-2xl border bg-surface px-4 py-4 text-left transition lg:px-5 lg:py-5',
-                          isActive
+                          selectedId === pedido.id
                             ? 'border-[#4B82D8] shadow-[0_0_0_1px_rgba(75,130,216,0.30)]'
                             : 'border-transparent hover:border-border-strong'
                         )}

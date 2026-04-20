@@ -136,22 +136,25 @@ public class PedidoService {
     public List<PedidoResponse> findPendentesDoAgente(UUID locadorId) {
         List<Long> matriculas = getMatriculasDoLocador(locadorId);
         if (matriculas.isEmpty()) return List.of();
-        return pedidoMapper.toResponseList(
-            pedidoRepository.findByStatusLocadorAndAutomovelMatriculaIn(
-                StatusLocador.PENDENTE.name(), matriculas)
-        );
+        List<Pedido> pedidosDoLocador = pedidoRepository.findByAutomovelMatriculaIn(matriculas);
+        List<Pedido> pendentes = pedidosDoLocador.stream()
+            .filter(pedido -> StatusLocador.PENDENTE.name().equalsIgnoreCase(pedido.getStatusLocador()))
+            .collect(Collectors.toList());
+        return pedidoMapper.toResponseList(pendentes);
     }
 
     @Executable
     public List<PedidoResponse> findAnalisadosDoAgente(UUID locadorId) {
         List<Long> matriculas = getMatriculasDoLocador(locadorId);
         if (matriculas.isEmpty()) return List.of();
-        List<Pedido> aprovados = pedidoRepository.findByStatusLocadorAndAutomovelMatriculaIn(
-            StatusLocador.APROVADO.name(), matriculas);
-        List<Pedido> reprovados = pedidoRepository.findByStatusLocadorAndAutomovelMatriculaIn(
-            StatusLocador.REPROVADO.name(), matriculas);
-        aprovados.addAll(reprovados);
-        return pedidoMapper.toResponseList(aprovados);
+        List<Pedido> pedidosDoLocador = pedidoRepository.findByAutomovelMatriculaIn(matriculas);
+        List<Pedido> analisados = pedidosDoLocador.stream()
+            .filter(pedido ->
+                StatusLocador.APROVADO.name().equalsIgnoreCase(pedido.getStatusLocador())
+                    || StatusLocador.REPROVADO.name().equalsIgnoreCase(pedido.getStatusLocador())
+            )
+            .collect(Collectors.toList());
+        return pedidoMapper.toResponseList(analisados);
     }
 
     @Executable
@@ -234,14 +237,10 @@ public class PedidoService {
     }
 
     private List<Long> getMatriculasDoLocador(UUID locadorId) {
-        try {
-            List<AutomovelInfo> automoveis = vehiclesServiceClient.getMeusAutomoveis(locadorId);
-            return automoveis.stream()
-                .map(AutomovelInfo::getMatricula)
-                .collect(Collectors.toList());
-        } catch (Exception e) {
-            return List.of();
-        }
+        List<AutomovelInfo> automoveis = vehiclesServiceClient.getMeusAutomoveis(locadorId);
+        return automoveis.stream()
+            .map(AutomovelInfo::getMatricula)
+            .collect(Collectors.toList());
     }
 
     private void atualizarDisponibilidadeVeiculo(Long matricula, boolean disponivel, String authorization) {

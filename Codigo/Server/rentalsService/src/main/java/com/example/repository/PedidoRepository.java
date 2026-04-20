@@ -15,6 +15,8 @@ public interface PedidoRepository extends CrudRepository<Pedido, UUID> {
 
     List<Pedido> findByAutomovelMatricula(Long automovelMatricula);
 
+    List<Pedido> findByAutomovelMatriculaIn(List<Long> matriculas);
+
     List<Pedido> findByStatusGeral(String statusGeral);
 
     List<Pedido> findByStatusLocadorAndAutomovelMatriculaIn(String statusLocador, List<Long> matriculas);
