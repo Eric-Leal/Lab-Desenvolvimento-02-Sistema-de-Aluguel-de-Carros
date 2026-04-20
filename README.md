@@ -314,8 +314,10 @@ Docs/
 │   ├── astah/
 │   │   ├── diagrama-caso-de-uso-lab2.asta
 │   │   ├── diagrama-de-classe.asta
-│   │   └── diagrama-de-pacotes.asta
+│   │   ├── diagrama-de-pacotes.asta
+│   │   └── Diagrama_de_atividades.asta
 │   ├── Diagrama-caso-uso-lab2.png
+│   ├── Diagrama_de_atividade.png
 │   ├── diagrama-de-classe.png
 │   ├── diagrama-de-pacotes.png
 │   ├── diagrama-de-componentes.png
@@ -483,6 +485,12 @@ O repositório possui documentação funcional, arquitetural e visual distribuí
 
 Representa os atores principais do sistema e os fluxos de negócio associados, como autenticação, gerenciamento de cadastro, solicitação de aluguel, análise por agentes, contratos e históricos.
 
+#### Diagrama de Atividades
+
+[![Diagrama de Atividades](Docs/Diagramas/Diagrama_de_atividade.png)](Docs/Diagramas/Diagrama_de_atividade.png)
+
+Representa o fluxo de atividades do pedido de locação, mostrando as interações entre Cliente, Agente locador e Agente banco — desde a criação do pedido, avaliação, decisões de financiamento, até o fechamento ou reprovação do contrato.
+
 #### Diagrama de Pacotes
 
 [![Diagrama de Pacotes](Docs/Diagramas/diagrama-de-pacotes.png)](Docs/Diagramas/diagrama-de-pacotes.png)
@@ -510,6 +518,7 @@ Os arquivos editáveis do Astah estão em:
 - `Docs/Diagramas/astah/diagrama-caso-de-uso-lab2.asta`
 - `Docs/Diagramas/astah/diagrama-de-classe.asta`
 - `Docs/Diagramas/astah/diagrama-de-pacotes.asta`
+ - `Docs/Diagramas/astah/Diagrama_de_atividades.asta`
 
 ### Histórias de usuário
 

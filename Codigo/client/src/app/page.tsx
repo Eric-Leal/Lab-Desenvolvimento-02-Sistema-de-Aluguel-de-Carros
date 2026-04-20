@@ -71,17 +71,17 @@ export default function Home() {
 
   return (
     <main>
-      <section className="relative overflow-hidden bg-linear-to-br from-primary-700 to-primary-600 px-6 py-20 sm:px-8 lg:px-0 lg:py-28">
+      <section className="relative overflow-hidden px-6 py-20 sm:px-8 lg:px-0 lg:py-28" style={{ backgroundImage: 'var(--page-gradient)' }}>
         <div className="ds-shell relative z-10 grid items-center gap-12 lg:grid-cols-[1fr_500px]">
           <div className="space-y-10">
             <div className="space-y-6">
               <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary-200">
                 Locação Premium
               </p>
-              <h1 className="ds-display text-white">
+              <h1 className="ds-display text-text-primary">
                 Dirija com Elegância
               </h1>
-              <p className="max-w-lg text-lg leading-relaxed text-primary-100 opacity-90">
+              <p className="max-w-lg text-lg leading-relaxed text-text-secondary">
                 Descubra nossa coleção exclusiva de veículos. Experiência de locação premium com atendimento
                 personalizado.
               </p>
@@ -183,7 +183,7 @@ export default function Home() {
             <div className="flex flex-wrap items-center justify-center gap-4 pt-6">
               <Link
                 href="/cadastro"
-                className="inline-flex h-13 items-center justify-center rounded-md bg-linear-to-br from-primary-700 to-primary-600 px-10 text-sm font-semibold text-white shadow-xl shadow-primary-500/20 transition-all hover:brightness-110 active:scale-95"
+                className="inline-flex h-13 items-center justify-center rounded-md bg-primary px-10 text-sm font-semibold text-white shadow-xl shadow-primary-500/20 transition-all hover:brightness-110 active:scale-95"
               >
                 Começar Agora
               </Link>
