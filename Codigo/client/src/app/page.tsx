@@ -75,7 +75,7 @@ export default function Home() {
         <div className="ds-shell relative z-10 grid items-center gap-12 lg:grid-cols-[1fr_500px]">
           <div className="space-y-10">
             <div className="space-y-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary-200">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-text-brand">
                 Locação Premium
               </p>
               <h1 className="ds-display text-text-primary">
