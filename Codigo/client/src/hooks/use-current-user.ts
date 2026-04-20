@@ -23,6 +23,7 @@ type RawProfile = {
   nome?: string
   email?: string
   imageUrl?: string
+  tipo?: string
   profissao?: string
   documento?: string
   rendimentoTotal?: number
@@ -35,6 +36,7 @@ export type CurrentUserProfile = {
   nome: string
   email: string
   imageUrl: string
+  tipo?: string
   profissao: string
   documento: string
   rendimentoTotal?: number
@@ -148,6 +150,7 @@ export function useCurrentUser() {
         nome: data.nome || '',
         email: data.email || '',
         imageUrl: data.imageUrl || '',
+        tipo: typeof data.tipo === 'string' ? data.tipo : undefined,
         profissao: data.profissao || '',
         documento: data.documento || '',
         rendimentoTotal: typeof data.rendimentoTotal === 'number' ? data.rendimentoTotal : undefined,
