@@ -75,7 +75,7 @@ export default function Home() {
         <div className="ds-shell relative z-10 grid items-center gap-12 lg:grid-cols-[1fr_500px]">
           <div className="space-y-10">
             <div className="space-y-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary-200">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-text-brand">
                 Locação Premium
               </p>
               <h1 className="ds-display text-text-primary">
@@ -90,14 +90,14 @@ export default function Home() {
             <div className="flex flex-wrap gap-4">
               <Link
                 href="/veiculos"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-white px-8 text-sm font-semibold text-primary-700 transition-all hover:bg-neutral-50 hover:shadow-lg active:scale-95"
+                className="inline-flex h-13 items-center justify-center rounded-md bg-linear-to-br from-primary-700 to-primary-600 px-10 text-sm font-semibold text-white shadow-xl shadow-primary-500/20 transition-all hover:brightness-110 active:scale-95"
               >
                 Ver Veículos
               </Link>
               {!isLoading && !isAuthenticated && (
                 <Link
                   href="/cadastro"
-                  className="inline-flex h-12 items-center justify-center rounded-md border border-white/30 bg-white/10 px-8 text-sm font-semibold text-white transition-all hover:bg-white/20 active:scale-95"
+                  className="inline-flex h-13 items-center justify-center rounded-md border border-primary-700 bg-transparent px-10 text-sm font-semibold text-primary-700 transition-all hover:bg-primary-700/10 active:scale-95 dark:border-white/30 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
                 >
                   Criar Conta
                 </Link>
@@ -183,7 +183,7 @@ export default function Home() {
             <div className="flex flex-wrap items-center justify-center gap-4 pt-6">
               <Link
                 href="/cadastro"
-                className="inline-flex h-13 items-center justify-center rounded-md bg-primary px-10 text-sm font-semibold text-white shadow-xl shadow-primary-500/20 transition-all hover:brightness-110 active:scale-95"
+                className="inline-flex h-13 items-center justify-center rounded-md bg-linear-to-br from-primary-700 to-primary-600 px-10 text-sm font-semibold text-white shadow-xl shadow-primary-500/20 transition-all hover:brightness-110 active:scale-95"
               >
                 Começar Agora
               </Link>
