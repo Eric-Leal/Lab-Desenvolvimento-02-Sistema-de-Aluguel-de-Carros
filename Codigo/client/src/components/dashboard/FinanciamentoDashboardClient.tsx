@@ -36,7 +36,6 @@ type DashboardPedido = {
   clienteProfissao: string
   clienteRendimento: number
   clienteEndereco: string
-  isMock?: boolean
 }
 
 type HistoricoItem = {
@@ -53,23 +52,6 @@ interface FinanciamentoDashboardClientProps {
   subtitle: string
 }
 
-const FALLBACK_PEDIDO: DashboardPedido = {
-  id: 'mock-1',
-  clienteId: 'mock-client-1',
-  veiculoNome: 'Porsche 911 Carrera',
-  placa: 'GHI-9012',
-  locadorNome: 'Elite Motors',
-  periodoLabel: '2025-06-01 -> 2025-06-05',
-  dataPedidoLabel: '15/05/2025',
-  valorTotal: 4450,
-  imagemUrl: '/images/carro.webp',
-  clienteNome: 'João Silva',
-  clienteCpf: '12345678900',
-  clienteProfissao: 'Engenheiro de Software',
-  clienteRendimento: 8000,
-  clienteEndereco: 'Rua das Flores, 123 - São Paulo/SP',
-  isMock: true,
-}
 
 function formatDateOnly(value: string): string {
   if (!value) return ''
@@ -187,18 +169,12 @@ export function FinanciamentoDashboardClient({ mode, heading, subtitle }: Financ
     try {
       const pendentes = await rentalsService.listarDisponiveisBanco()
 
-      if (pendentes.length === 0) {
-        setPendingPedidos([FALLBACK_PEDIDO])
-        if (mode === 'financeiro') setSelectedId(FALLBACK_PEDIDO.id)
-        return
-      }
-
       const hydrated = await hydratePedidos(pendentes)
       setPendingPedidos(hydrated)
       if (mode === 'financeiro') setSelectedId(hydrated[0]?.id ?? null)
-    } catch {
-      setPendingPedidos([FALLBACK_PEDIDO])
-      if (mode === 'financeiro') setSelectedId(FALLBACK_PEDIDO.id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar pedidos.')
+      setPendingPedidos([])
     } finally {
       setLoading(false)
     }
@@ -222,10 +198,8 @@ export function FinanciamentoDashboardClient({ mode, heading, subtitle }: Financ
     setIsSubmitting(true)
     setError(null)
 
-    const shouldPersist = Boolean(userId) && !selectedPedido.isMock
-
     try {
-      if (shouldPersist && userId) {
+      if (userId) {
         if (decisao === 'APROVADO') {
           await rentalsService.aprovarFinanciamento(selectedPedido.id, userId)
         } else {
