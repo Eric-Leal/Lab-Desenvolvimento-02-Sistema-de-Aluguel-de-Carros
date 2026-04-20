@@ -18,6 +18,7 @@ import com.example.service.cloudinary.CloudinaryUploadResult;
 import io.micronaut.context.annotation.Executable;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.multipart.CompletedFileUpload;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import java.io.IOException;
@@ -36,7 +37,8 @@ public class AutomovelService {
     private final AutomovelRepository automovelRepository;
     private final AutomovelImagemRepository automovelImagemRepository;
     private final CloudinaryService cloudinaryService;
-    private final AutomovelMapper automovelMapper = AutomovelMapper.INSTANCE;
+    @Inject
+    private AutomovelMapper automovelMapper;
 
     public AutomovelService(
         AutomovelRepository automovelRepository,
