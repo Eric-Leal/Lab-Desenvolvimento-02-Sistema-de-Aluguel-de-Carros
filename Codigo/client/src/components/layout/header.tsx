@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Menu } from 'lucide-react'
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
 import { useAuth } from '@/components/providers/auth-provider'
+import { useCurrentUser } from '@/hooks/use-current-user'
 import { UserDropdown } from '@/components/layout/user-dropdown'
 
 const navItems = [
@@ -20,8 +21,14 @@ const authenticatedOnlyNavItems = [
 
 export function Header() {
   const { isAuthenticated, isLoading, user } = useAuth()
+  const { profile } = useCurrentUser()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
+
+  const agentType = profile?.tipo?.toUpperCase()
+  const isBankAgent = user?.role === 'AGENT' && agentType === 'BANCO'
+  const isLocadorAgent = user?.role === 'AGENT' && (agentType === 'LOCADOR' || agentType === 'EMPRESA')
+  const isAgentWithoutType = user?.role === 'AGENT' && !isBankAgent && !isLocadorAgent
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -49,7 +56,9 @@ export function Header() {
     ? [
         ...navItems,
         ...(user?.role === 'CLIENT' ? [authenticatedOnlyNavItems[0]] : []),
-        ...(user?.role === 'AGENT' ? [authenticatedOnlyNavItems[1]] : []),
+        ...(isLocadorAgent || isAgentWithoutType ? [authenticatedOnlyNavItems[1]] : []),
+        ...(isBankAgent ? [{ href: '/dashboard/banco', label: 'Dashboard Banco' }] : []),
+        ...(isLocadorAgent ? [{ href: '/dashboard/financeiro', label: 'Dashboard Financeiro' }] : []),
       ]
     : navItems
 

@@ -1,6 +1,7 @@
 package com.example.dto.agent;
 
 import com.example.dto.common.AddressDTO;
+import com.example.enums.TipoAgente;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.micronaut.core.annotation.Introspected;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,7 @@ public class AgentResponse {
     private String email;
     private String documento;
     private String imageUrl;
+    private TipoAgente tipo;
 
     @JsonProperty("endereço")
     private AddressDTO address;

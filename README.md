@@ -27,6 +27,7 @@ Projeto acadêmico desenvolvido para a disciplina de Laboratório de Desenvolvim
 - [Contexto Acadêmico](#contexto-acadêmico)
 - [Visão Geral](#visão-geral)
 - [Arquitetura](#arquitetura)
+- [Atualizações Recentes (Merge de PR)](#atualizações-recentes-merge-de-pr)
 - [Microserviços](#microserviços)
 - [Hospedagem](#hospedagem)
 - [Tecnologias Utilizadas](#tecnologias-utilizadas)
@@ -52,6 +53,40 @@ O repositório foi organizado como um monorepo com duas frentes principais:
 - `Codigo/Server`: gateway, microserviços backend, scripts operacionais e infraestrutura local.
 
 O backend segue uma arquitetura de microserviços com responsabilidades bem separadas, comunicação HTTP via gateway e persistência relacional em PostgreSQL.
+
+## Atualizações Recentes (Merge de PR)
+
+Esta seção consolida as mudanças mais relevantes introduzidas no último ciclo de merge em `main` (Merge pull request #11).
+
+### Mudanças de maior impacto
+
+1. Sincronização de disponibilidade de veículos no backend:
+  - o fluxo de pedidos passou a refletir melhor os eventos de aprovação, reprovação bancária e cancelamento
+  - quando o status do pedido muda nesses cenários, o estado do veículo é sincronizado entre `rentalsService` e `vehiclesService`
+  - objetivo: reduzir inconsistências de disponibilidade durante o ciclo de locação
+
+2. Novo eixo de banco e financeiro no frontend:
+  - foram adicionadas páginas e dashboards para visão de banco e financeiro
+  - o frontend recebeu integrações adicionais em serviços para suportar esse fluxo
+  - objetivo: ampliar a operação do lado do agente/gestão com foco no processo de análise
+
+3. Ajustes de experiência e navegação:
+  - adição de navegação mobile no cabeçalho
+  - remoção do botão de solicitar aluguel para perfil de agente na tela de detalhes do veículo
+  - objetivo: alinhar a interface aos papéis de usuário e melhorar usabilidade em dispositivos móveis
+
+4. Pacote de correções transversais:
+  - melhorias em autenticação e obtenção do usuário atual no frontend
+  - ajustes em telas de pedidos, veículos, cadastro e configurações
+  - refino em serviços HTTP e integração com gateway/microserviços
+
+### Commits analisados nesse merge
+
+- `9eefca0` feat(rentals,vehicles): sincroniza disponibilidade do veículo com aprovação, reprovação bancária e cancelamento
+- `9a193d9` inclusão de páginas e dashboard de banco/financeiro
+- `94c8752` navbar mobile e restrição de ação para perfil de agente
+- `0a5a867` pacote amplo de correções backend/frontend
+- `b148aac` ajustes de integração e validações entre frontend e backend
 
 ## Arquitetura
 
@@ -279,8 +314,10 @@ Docs/
 │   ├── astah/
 │   │   ├── diagrama-caso-de-uso-lab2.asta
 │   │   ├── diagrama-de-classe.asta
-│   │   └── diagrama-de-pacotes.asta
+│   │   ├── diagrama-de-pacotes.asta
+│   │   └── Diagrama_de_atividades.asta
 │   ├── Diagrama-caso-uso-lab2.png
+│   ├── Diagrama_de_atividade.png
 │   ├── diagrama-de-classe.png
 │   ├── diagrama-de-pacotes.png
 │   ├── diagrama-de-componentes.png
@@ -448,6 +485,12 @@ O repositório possui documentação funcional, arquitetural e visual distribuí
 
 Representa os atores principais do sistema e os fluxos de negócio associados, como autenticação, gerenciamento de cadastro, solicitação de aluguel, análise por agentes, contratos e históricos.
 
+#### Diagrama de Atividades
+
+[![Diagrama de Atividades](Docs/Diagramas/Diagrama_de_atividade.png)](Docs/Diagramas/Diagrama_de_atividade.png)
+
+Representa o fluxo de atividades do pedido de locação, mostrando as interações entre Cliente, Agente locador e Agente banco — desde a criação do pedido, avaliação, decisões de financiamento, até o fechamento ou reprovação do contrato.
+
 #### Diagrama de Pacotes
 
 [![Diagrama de Pacotes](Docs/Diagramas/diagrama-de-pacotes.png)](Docs/Diagramas/diagrama-de-pacotes.png)
@@ -475,6 +518,7 @@ Os arquivos editáveis do Astah estão em:
 - `Docs/Diagramas/astah/diagrama-caso-de-uso-lab2.asta`
 - `Docs/Diagramas/astah/diagrama-de-classe.asta`
 - `Docs/Diagramas/astah/diagrama-de-pacotes.asta`
+ - `Docs/Diagramas/astah/Diagrama_de_atividades.asta`
 
 ### Histórias de usuário
 
